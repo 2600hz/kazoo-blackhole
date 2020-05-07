@@ -159,7 +159,7 @@ setters(Context, Setters) ->
 %% @doc
 %% @end
 %%------------------------------------------------------------------------------
--spec auth_token(context()) -> kz_term:api_binary().
+-spec auth_token(context()) -> kz_term:api_ne_binary().
 auth_token(#bh_context{auth_token=AuthToken}) ->
     AuthToken.
 
