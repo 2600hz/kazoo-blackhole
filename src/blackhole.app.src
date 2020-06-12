@@ -3,7 +3,7 @@
                              kazoo_bindings,kazoo_data,kazoo_documents,
                              kazoo_events,kazoo_modb,kazoo_stdlib,
                              kazoo_token_buckets,kernel,lager,ssl,stdlib]},
-              {description,"blackhole - websocket"},
+              {description,"Blackhole: Websocket interface to KAZOO events"},
               {env,[{is_kazoo_app,true}]},
               {mod,{blackhole_app,[]}},
               {modules,[]},
