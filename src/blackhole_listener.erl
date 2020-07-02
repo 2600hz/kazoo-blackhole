@@ -73,7 +73,7 @@ start_link() ->
 handle_amqp_event(EventJObj, _Props, ?MODULE_REQ_ROUTING_KEY) ->
     handle_module_req(EventJObj);
 handle_amqp_event(EventJObj, _Props, <<_/binary>> = RoutingKey) ->
-    Evt = kz_util:get_event_type(EventJObj),
+    Evt = kz_api:event_type(EventJObj),
     lager:debug("recv event ~p (~s)", [Evt, RoutingKey]),
     RK = <<"blackhole.event.", RoutingKey/binary>>,
     {Time, Res} = timer:tc(blackhole_bindings, pmap, [RK, [RoutingKey, EventJObj]]),
