@@ -32,7 +32,7 @@
        ,<<"conference.event.",Event/binary,".", AccountId/binary, ".", ConferenceId/binary, ".", CallId/binary>>
        ).
 -define(BINDING(ConferenceId, CallId)
-       ,?BINDING(ConferenceId, CallId, <<"*">>)
+       ,<<"conference.event.", ConferenceId/binary, ".", CallId/binary>>
        ).
 -define(BINDING(ConferenceId, CallId, Event)
        ,<<"conference.event.", ConferenceId/binary, ".", CallId/binary, ".", Event/binary>>
@@ -54,7 +54,8 @@ init() ->
 
 init_bindings() ->
     Bindings = [?COMMAND(<<"{CONFERENCE_ID}">>)
-               ] ++ ?EVENT_BINDINGS(<<"{CONFERENCE_ID}">>, <<"{CALL_ID}">>),
+                | ?EVENT_BINDINGS(<<"{CONFERENCE_ID}">>, <<"{CALL_ID}">>)
+               ],
     case kapps_config:set_default(?CONFIG_CAT, [<<"bindings">>, <<"conference">>], Bindings) of
         {'ok', _} -> lager:debug("initialized conference bindings");
         {'error', _E} -> lager:info("failed to initialize conference bindings: ~p", [_E])
@@ -89,8 +90,16 @@ bindings(_Context, #{account_id := _AccountId
         ,subscribed => Subscribed
         ,listeners => Listeners
         };
-bindings(Context, #{keys := [<<"event">>, ConferenceId, CallId]}=Map) ->
-    bindings(Context, Map#{keys => [<<"event">>, ConferenceId, CallId, ?ALL]});
+bindings(_Context, #{account_id := AccountId
+                    ,keys := [<<"event">>, ConferenceId, CallId]
+                    }=Map) ->
+    Requested = ?BINDING(ConferenceId, CallId),
+    Subscribed = [?ACCOUNT_BINDING(AccountId, ConferenceId, CallId)],
+    Listeners = [{'amqp', 'conference', event_binding_options(AccountId, ConferenceId, CallId)}],
+    Map#{requested => Requested
+        ,subscribed => Subscribed
+        ,listeners => Listeners
+        };
 bindings(_Context, #{account_id := AccountId
                     ,keys := [<<"event">>, ConferenceId, CallId, Event]
                     }=Map) ->
@@ -113,6 +122,17 @@ bindings(_Context, #{account_id := AccountId
 -spec command_binding_options(kz_term:ne_binary()) -> kz_term:proplist().
 command_binding_options(ConfId) ->
     [{'restrict_to', [{'command', ConfId}]}
+    ,'federate'
+    ].
+
+-spec event_binding_options(kz_term:ne_binary(), kz_term:ne_binary(), kz_term:ne_binary()) -> kz_term:proplist().
+event_binding_options(AccountId, ConferenceId, CallId) ->
+    [{'restrict_to', [{'event', [{'account_id', AccountId}
+                                ,{'conference_id', ConferenceId}
+                                ,{'call_id', CallId}
+                                ]
+                      }]
+     }
     ,'federate'
     ].
 
