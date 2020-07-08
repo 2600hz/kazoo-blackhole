@@ -18,7 +18,6 @@
         ]).
 
 -include("blackhole.hrl").
--include_lib("kazoo/include/kz_system_config.hrl").
 
 %%------------------------------------------------------------------------------
 %% @doc
