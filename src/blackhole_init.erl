@@ -21,6 +21,12 @@
 -define(SOCKET_PORT, kapps_config:get_integer(?APP_NAME, <<"port">>, 5555)).
 -define(SOCKET_ACCEPTORS, kapps_config:get_integer(?APP_NAME, <<"acceptors">>, 100)).
 
+-define(BASE_TRANSPORT_OPTIONS(IP)
+       ,[{'ip', IP}
+        ,{'send_timeout', kapps_config:get_integer(?CONFIG_CAT, <<"send_timeout_ms">>, 5 * ?MILLISECONDS_IN_SECOND)}
+        ]
+       ).
+
 -spec blackhole_routes() -> cowboy_router:routes().
 blackhole_routes() -> [{'_', paths_list()}].
 
@@ -65,9 +71,7 @@ maybe_start_plaintext(Dispatch, IP) ->
             try
                 lager:info("trying to bind to address ~s port ~b", [inet:ntoa(IP), Port]),
                 cowboy:start_clear('blackhole_socket_handler'
-                                  ,#{'socket_opts' => [{'ip', IP}
-                                                      ,{'port', Port}
-                                                      ]
+                                  ,#{'socket_opts' => [{'port', Port} | ?BASE_TRANSPORT_OPTIONS(IP)]
                                     ,'num_acceptors' => Workers
                                     }
                                   ,#{'env' => #{'dispatch' => Dispatch
@@ -111,7 +115,7 @@ start_ssl(Dispatch, IP) ->
                            ]
                           ),
                 cowboy:start_tls('blackhole_socket_handler_ssl'
-                                ,#{'socket_opts' => [{'ip', IP} | SSLOpts]
+                                ,#{'socket_opts' => ?BASE_TRANSPORT_OPTIONS(IP) ++ SSLOpts
                                   ,'num_acceptors' => Workers
                                   }
                                 ,#{'env' => #{'dispatch' => Dispatch
@@ -152,11 +156,17 @@ base_ssl_opts(RootDir) ->
     ,{'certfile', find_file(kapps_config:get_string(?CONFIG_CAT
                                                    ,<<"ssl_cert">>
                                                    ,filename:join([RootDir, <<"priv/ssl/blackhole.crt">>])
-                                                   ), RootDir)}
+                                                   )
+                           ,RootDir
+                           )
+     }
     ,{'keyfile', find_file(kapps_config:get_string(?CONFIG_CAT
                                                   ,<<"ssl_key">>
                                                   ,filename:join([RootDir, <<"priv/ssl/blackhole.key">>])
-                                                  ), RootDir)}
+                                                  )
+                          ,RootDir
+                          )
+     }
     ,{'password', kapps_config:get_string(?CONFIG_CAT, <<"ssl_password">>, <<>>)}
     ].
 
@@ -166,9 +176,10 @@ find_file(File, Root) ->
         'true' -> File;
         'false' ->
             FromRoot = filename:join([Root, File]),
-            lager:info("failed to find file at ~s, trying ~s", [File, FromRoot]),
             case filelib:is_file(FromRoot) of
-                'true' -> FromRoot;
+                'true' ->
+                    lager:info("failed to find file at ~s; found ~s instead", [File, FromRoot]),
+                    FromRoot;
                 'false' ->
                     lager:info("failed to find file at ~s", [FromRoot]),
                     throw({'invalid_file', File})
