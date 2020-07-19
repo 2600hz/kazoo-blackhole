@@ -15,28 +15,23 @@
 -module(bh_conference).
 
 -export([init/0
+        ,authorize/2
         ,validate/2
         ,bindings/2
         ]).
 
 -include("blackhole.hrl").
 
--define(CONFERENCE_EVENTS
-       ,[<<"*">> | kapi_conference:events()
-        ]).
+-define(CONFERENCE_EVENTS, [<<"*">> | kapi_conference:events()]).
 
--define(ACCOUNT_BINDING(AccountId, ConferenceId, CallId)
-       ,?ACCOUNT_BINDING(AccountId, ConferenceId, CallId, <<"*">>)
-       ).
--define(ACCOUNT_BINDING(AccountId, ConferenceId, CallId, Event)
+-define(ACCOUNT_BINDING(Event, AccountId, ConferenceId, CallId)
        ,<<"conference.event.",Event/binary,".", AccountId/binary, ".", ConferenceId/binary, ".", CallId/binary>>
        ).
--define(BINDING(ConferenceId, CallId)
-       ,<<"conference.event.", ConferenceId/binary, ".", CallId/binary>>
+
+-define(BINDING(Event, ConferenceId, CallId)
+       ,<<"conference.event.", Event/binary, ".", ConferenceId/binary, ".", CallId/binary>>
        ).
--define(BINDING(ConferenceId, CallId, Event)
-       ,<<"conference.event.", ConferenceId/binary, ".", CallId/binary, ".", Event/binary>>
-       ).
+
 -define(COMMAND(ConferenceId)
        ,<<"conference.command.", ConferenceId/binary>>
        ).
@@ -49,28 +44,35 @@
 -spec init() -> any().
 init() ->
     init_bindings(),
+    _ = blackhole_bindings:bind(<<"blackhole.events.authorize.conference">>, ?MODULE, 'authorize'),
     _ = blackhole_bindings:bind(<<"blackhole.events.validate.conference">>, ?MODULE, 'validate'),
     blackhole_bindings:bind(<<"blackhole.events.bindings.conference">>, ?MODULE, 'bindings').
 
 init_bindings() ->
     Bindings = [?COMMAND(<<"{CONFERENCE_ID}">>)
-                | ?EVENT_BINDINGS(<<"{CONFERENCE_ID}">>, <<"{CALL_ID}">>)
-               ],
+               ] ++ ?EVENT_BINDINGS(<<"{CONFERENCE_ID}">>, <<"{CALL_ID}">>),
     case kapps_config:set_default(?CONFIG_CAT, [<<"bindings">>, <<"conference">>], Bindings) of
         {'ok', _} -> lager:debug("initialized conference bindings");
         {'error', _E} -> lager:info("failed to initialize conference bindings: ~p", [_E])
     end.
 
+-spec authorize(bh_context:context(), map()) -> bh_context:context().
+authorize(Context, #{keys := [<<"command">>, ?ALL]}) ->
+    case bh_context:is_superduper_admin(Context) of
+        'true' -> Context;
+        'false' -> bh_context:add_error(Context, <<"unauthorized wildcard for conference id">>)
+    end;
+authorize(Context, #{keys := [<<"event">>, _, ?ALL, _]}) ->
+    case bh_context:is_superduper_admin(Context) of
+        'true' -> Context;
+        'false' -> bh_context:add_error(Context, <<"unauthorized wildcard for conference id">>)
+    end;
+authorize(Context, _) -> Context.
+
 -spec validate(bh_context:context(), map()) -> bh_context:context().
-validate(Context, #{keys := [<<"command">>, ?ALL]}) ->
-    bh_context:add_error(Context, <<"ConferenceId required">>);
 validate(Context, #{keys := [<<"command">>, _]}) ->
     Context;
-validate(Context, #{keys := [<<"event">>, ?ALL | _Rest]}) ->
-    bh_context:add_error(Context, <<"ConferenceId required">>);
-validate(Context, #{keys := [<<"event">>, _, ?ALL]}) ->
-    Context;
-validate(Context, #{keys := [<<"event">>, _, ?ALL, Event]}) ->
+validate(Context, #{keys := [<<"event">>, Event, _, _]}) ->
     case lists:member(Event, ?CONFERENCE_EVENTS) of
         'false' ->
             bh_context:add_error(Context, <<"Unsupported conference event ",Event/binary>>);
@@ -91,21 +93,11 @@ bindings(_Context, #{account_id := _AccountId
         ,listeners => Listeners
         };
 bindings(_Context, #{account_id := AccountId
-                    ,keys := [<<"event">>, ConferenceId, CallId]
+                    ,keys := [<<"event">>, Event, ConferenceId, CallId]
                     }=Map) ->
-    Requested = ?BINDING(ConferenceId, CallId),
-    Subscribed = [?ACCOUNT_BINDING(AccountId, ConferenceId, CallId)],
-    Listeners = [{'amqp', 'conference', event_binding_options(AccountId, ConferenceId, CallId, ?ALL)}],
-    Map#{requested => Requested
-        ,subscribed => Subscribed
-        ,listeners => Listeners
-        };
-bindings(_Context, #{account_id := AccountId
-                    ,keys := [<<"event">>, ConferenceId, CallId, Event]
-                    }=Map) ->
-    Requested = ?BINDING(ConferenceId, CallId, Event),
-    Subscribed = [?ACCOUNT_BINDING(AccountId, ConferenceId, CallId, Event)],
-    Listeners = [{'amqp', 'conference', event_binding_options(AccountId, ConferenceId, CallId, Event)}],
+    Requested = ?BINDING(Event, ConferenceId, CallId),
+    Subscribed = [?ACCOUNT_BINDING(Event, AccountId, ConferenceId, CallId)],
+    Listeners = [{'amqp', 'conference', event_binding_options(Event, AccountId, ConferenceId, CallId)}],
     Map#{requested => Requested
         ,subscribed => Subscribed
         ,listeners => Listeners
@@ -126,11 +118,11 @@ command_binding_options(ConfId) ->
     ].
 
 -spec event_binding_options(kz_term:ne_binary(), kz_term:ne_binary(), kz_term:ne_binary(), kz_term:ne_binary()) -> kz_term:proplist().
-event_binding_options(AccountId, ConferenceId, CallId, Event) ->
-    [{'restrict_to', [{'event', [{'account_id', AccountId}
+event_binding_options(Event, AccountId, ConferenceId, CallId) ->
+    [{'restrict_to', [{'event', [{'event', Event}
+                                ,{'account_id', AccountId}
                                 ,{'conference_id', ConferenceId}
                                 ,{'call_id', CallId}
-                                ,{'event', Event}
                                 ]
                       }]
      }
