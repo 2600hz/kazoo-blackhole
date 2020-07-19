@@ -24,7 +24,6 @@
                    ,<<"CHANNEL_HOLD">>, <<"CHANNEL_UNHOLD">>
                    ,<<"CHANNEL_BRIDGE">>
                    ,<<"PARK_PARKED">>, <<"PARK_RETRIEVED">>, <<"PARK_ABANDONED">>
-                   ,<<"DETECT_SPEECH">>
                    ]).
 
 -define(ACCOUNT_BINDING(AccountId, Event, CallId)
