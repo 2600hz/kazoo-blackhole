@@ -11,7 +11,7 @@
 
 -include("blackhole.hrl").
 
--export([open/3
+-export([open/1
         ,recv/2
         ,close/1
         ]).
@@ -20,12 +20,12 @@
 
 -type bh_return() :: {'ok', bh_context:context()}.
 
--spec open(pid(), binary(), inet:ip_address()) -> bh_return().
-open(Pid, SessionId, IPAddr) ->
-    IPBin = kz_network_utils:iptuple_to_binary(IPAddr),
-    lager:debug("opening socket (~p) ~p, peer: ~p", [Pid, SessionId, IPBin]),
-
-    Context = bh_context:set_source(bh_context:new(Pid, SessionId), IPBin),
+-spec open(bh_context:context()) -> bh_return().
+open(Context) ->
+    lager:debug("opening socket (~p) ~p, peer: ~p", [bh_context:websocket_pid(Context)
+                                                    ,bh_context:websocket_session_id(Context)
+                                                    ,bh_context:source(Context)
+                                                    ]),
 
     Routing = <<"blackhole.session.open">>,
     Ctx = blackhole_bindings:fold(Routing, Context),

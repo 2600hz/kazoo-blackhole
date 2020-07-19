@@ -22,49 +22,89 @@
 
 -define(IDLE_TIMEOUT, ?MILLISECONDS_IN_HOUR).
 
--type blackhole_init() :: {inet:ip_address(), kz_term:ne_binary()}.
+-type blackhole_init() :: bh_context:context().
+-type init_reply() ::  {'ok' , cowboy_req:req(), cowboy_websocket:opts()} |
+                       {'cowboy_websocket', cowboy_req:req(), blackhole_init(), cowboy_websocket:opts()}.
+-type init_fun_reply() ::  init_reply() | bh_context:context().
 
 -spec init(cowboy_req:req(), cowboy_websocket:opts()) ->
           {'ok' , cowboy_req:req(), cowboy_websocket:opts()} |
           {'cowboy_websocket', cowboy_req:req(), blackhole_init(), cowboy_websocket:opts()}.
 init(Req, HandlerOpts) ->
+    InitFuns =  [fun check_subprotocols/3
+                ,fun allow_connection/3
+                ,fun set_session_id/3
+                ,fun authenticate/3
+                ],
+    init_fold(Req, HandlerOpts, bh_context:new(), InitFuns).
+
+init_fold(Req, _HandlerOpts, Context, []) ->
+    {'cowboy_websocket', Req, Context, #{idle_timeout => ?IDLE_TIMEOUT}};
+init_fold(Req, HandlerOpts, Context, [Fun | Funs]) ->
+    case Fun(Req, HandlerOpts, Context) of
+        {'ok', _, _} = Reply -> Reply;
+        {'ok', _} = Reply -> Reply;
+        Ctx -> init_fold(Req, HandlerOpts, Ctx, Funs)
+    end.
+
+-spec check_subprotocols(cowboy_req:req(), cowboy_websocket:opts(), bh_context:context()) ->
+          init_fun_reply().
+check_subprotocols(Req, HandlerOpts, Context) ->
     case cowboy_req:parse_header(<<"sec-websocket-protocol">>, Req) of
-        'undefined' -> maybe_allow_connection(Req, HandlerOpts);
+        'undefined' -> Context;
         _SubProtocols ->
             lager:warning("sub-protocols are not supported at the moment: ~p", [_SubProtocols]),
             {'ok', cowboy_req:reply(400, Req), HandlerOpts}
     end.
 
--spec maybe_allow_connection(cowboy_req:req(), cowboy_websocket:opts()) ->
-          {'ok', cowboy_req:req(), cowboy_websocket:opts()} |
-          {'cowboy_websocket', cowboy_req:req(), blackhole_init(), cowboy_websocket:opts()}.
-maybe_allow_connection(Req, HandlerOpts) ->
+-spec allow_connection(cowboy_req:req(), cowboy_websocket:opts(), bh_context:context()) ->
+          init_fun_reply().
+allow_connection(Req, HandlerOpts, Context) ->
     {RemoteIP, _Port} = cowboy_req:peer(Req),
     MaxConnectionsPerIP = kapps_config:get_integer(?CONFIG_CAT, <<"max_connections_per_ip">>),
-    case maybe_allow_connection(Req
-                               ,RemoteIP
+    case maybe_allow_connection(RemoteIP
                                ,MaxConnectionsPerIP
                                ,blackhole_tracking:session_count_by_ip(RemoteIP)
                                )
     of
-        {'ok', Req1} -> {'ok', Req1, HandlerOpts};
-        Resp -> Resp
+        true ->
+            IPBin = kz_network_utils:iptuple_to_binary(RemoteIP),
+            bh_context:set_source(Context, IPBin);
+        false ->
+            {'ok', cowboy_req:reply(429, Req), HandlerOpts}
     end.
 
-maybe_allow_connection(Req, RemoteIP, 'undefined', _ActiveConns) ->
+maybe_allow_connection(_RemoteIP, 'undefined', _ActiveConns) ->
     %% no max connection limit set
-    allow_connection(Req, RemoteIP);
-maybe_allow_connection(Req, RemoteIP, MaxConns, ActiveConns) when ActiveConns < MaxConns ->
+    true;
+maybe_allow_connection(RemoteIP, MaxConns, ActiveConns) when ActiveConns < MaxConns ->
     lager:debug("allowing connection from ~p (~p of ~p up)", [RemoteIP, ActiveConns, MaxConns]),
-    allow_connection(Req, RemoteIP);
-maybe_allow_connection(Req, RemoteIP, _MaxConns, ActiveConns) ->
+    true;
+maybe_allow_connection(RemoteIP, _MaxConns, ActiveConns) ->
     lager:warning("connection from ~p denied: max limit ~p reached", [RemoteIP, ActiveConns]),
-    {'ok', cowboy_req:reply(429, Req)}.
+    false.
 
-allow_connection(Req, RemoteIP) ->
-    SessionId = session_id(Req),
-    lager:info("allowing connection from ~s", [SessionId]),
-    {'cowboy_websocket', Req, {RemoteIP, SessionId}, #{idle_timeout => ?IDLE_TIMEOUT}}.
+set_session_id(Req, _HandlerOpts, Context) ->
+    bh_context:set_websocket_session_id(Context, session_id(Req)).
+
+authenticate(Req, HandlerOpts, Context) ->
+    Token = cowboy_req:parse_header(<<"authorization">>, Req),
+    case Token =/= undefined
+        andalso kz_auth:validate_token(Token)
+    of
+        false -> Context;
+        {'ok', JObj} ->
+            lager:info("token auth is valid, authenticating : ~p", [JObj]),
+            AccountId = kz_json:get_ne_value(<<"account_id">>, JObj),
+            Setters = [{fun bh_context:set_auth_token/2, Token}
+                      ,{fun bh_context:set_auth_account_id/2, AccountId}
+                      ,{fun bh_context:set_authorized/2, true}
+                      ],
+            bh_context:setters(Context, Setters);
+        {'error', R} ->
+            lager:debug("failed to authenticate token auth, ~p", [R]),
+            {'ok', cowboy_req:reply(403, Req), HandlerOpts}
+    end.
 
 -spec terminate(any(), cowboy_req:req(), bh_context:context() | cowboy_websocket:opts())  -> 'ok'.
 terminate(_Reason, Req, Opts) when is_list(Opts) ->
@@ -75,9 +115,13 @@ terminate(_Reason, Req, Context) ->
     lager:info("socket for session ~s down: ~p", [SessionId, _Reason]).
 
 -spec websocket_init(blackhole_init()) -> {'ok', bh_context:context()}.
-websocket_init({RemoteIP, SessionId}) ->
-    lager:info("init from ~p(~p)", [RemoteIP, SessionId]),
-    {'ok', _Context} = blackhole_socket_callback:open(self(), SessionId, RemoteIP).
+websocket_init(Context) ->
+    lager:info("init from ~p(~p) ~s", [bh_context:source(Context)
+                                      ,bh_context:websocket_session_id(Context)
+                                      ,bh_context:authorized(Context)
+                                      ]),
+    Ctx = bh_context:set_websocket_pid(Context, self()),
+    {'ok', _NewContext} = blackhole_socket_callback:open(Ctx).
 
 -spec websocket_handle(any(), bh_context:context()) ->
           {'ok', bh_context:context(), 'hibernate'}.
