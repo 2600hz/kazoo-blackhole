@@ -124,14 +124,17 @@ limits(Context, Action, Payload) ->
 command(Context, Action, Payload) ->
     Routing = <<"blackhole.command.", Action/binary>>,
     Ctx = handle_result(Context, blackhole_bindings:map(Routing, [Context, Payload])),
-    case bh_context:success(Ctx) of
-        'true' ->
+    case bh_context:success(Ctx)
+        andalso not bh_context:async_reply(Ctx)
+        andalso bh_context:resp_data(Ctx)
+    of
+        undefined -> Ctx;
+        false -> Ctx;
+        Data ->
             SessionPid = bh_context:websocket_pid(Ctx),
             RequestId = bh_context:req_id(Ctx),
-            Data = bh_context:resp_data(Ctx),
             blackhole_data_emitter:reply(SessionPid, RequestId, <<"success">>, Data),
-            Ctx;
-        'false' -> Ctx
+            bh_context:set_resp_data(Ctx, undefined)
     end.
 
 finish(Context, Action, _Payload) ->
