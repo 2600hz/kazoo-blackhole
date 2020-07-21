@@ -25,6 +25,7 @@
                          ,'bh_limits'
                          ,'bh_authz_subscribe'
                          ,'bh_api'
+                         ,'bh_ping'
                          ]).
 
 -type bh_subscribe_result() :: {'ok', bh_context:context()} | {'error', kz_term:ne_binary()}.
