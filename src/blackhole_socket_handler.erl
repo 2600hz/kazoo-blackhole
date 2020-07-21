@@ -98,7 +98,7 @@ authenticate(Req, HandlerOpts, Context) ->
             AccountId = kz_json:get_ne_value(<<"account_id">>, JObj),
             Setters = [{fun bh_context:set_auth_token/2, Token}
                       ,{fun bh_context:set_auth_account_id/2, AccountId}
-                      ,{fun bh_context:set_authorized/2, true}
+                      ,fun bh_context:set_authorized/1
                       ],
             bh_context:setters(Context, Setters);
         {'error', R} ->
