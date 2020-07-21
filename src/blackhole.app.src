@@ -10,4 +10,4 @@
               {modules,[]},
               {registered,[blackhole_listener,blackhole_sup,
                            blackhole_tracking]},
-              {vsn,"4.0.0"}]}.
+              {vsn,"5.0.0"}]}.
