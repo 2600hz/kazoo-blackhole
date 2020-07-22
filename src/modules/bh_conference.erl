@@ -36,7 +36,7 @@
        ,<<"conference.command.", ConferenceId/binary>>
        ).
 -define(EVENT_BINDINGS(ConferenceId, CallId)
-       ,lists:foldl(fun(E, Acc) -> [?BINDING(ConferenceId, CallId, E) | Acc] end, [], ?CONFERENCE_EVENTS)
+       ,lists:foldl(fun(E, Acc) -> [?BINDING(E, ConferenceId, CallId) | Acc] end, [], ?CONFERENCE_EVENTS)
        ).
 -define(ALL, <<"*">>).
 
