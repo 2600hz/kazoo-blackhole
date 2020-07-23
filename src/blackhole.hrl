@@ -4,11 +4,11 @@
 -include_lib("kazoo_stdlib/include/kz_types.hrl").
 -include_lib("kazoo_stdlib/include/kz_log.hrl").
 -include_lib("kazoo_stdlib/include/kz_databases.hrl").
--include_lib("kazoo_events/include/kz_hooks.hrl").
+-include_lib("kazoo_hooks/include/kz_hooks.hrl").
 
 -define(APP, 'blackhole').
 -define(APP_NAME, <<"blackhole">>).
--define(APP_VERSION, <<"4.0.0">>).
+-define(APP_VERSION, <<"5.0.0">>).
 -define(CONFIG_CAT, <<"blackhole">>).
 
 -define(CACHE_NAME, 'blackhole_cache').
@@ -24,6 +24,8 @@
 -define(COMMAND_MODULES, ['bh_events'
                          ,'bh_limits'
                          ,'bh_authz_subscribe'
+                         ,'bh_api'
+                         ,'bh_ping'
                          ]).
 
 -type bh_subscribe_result() :: {'ok', bh_context:context()} | {'error', kz_term:ne_binary()}.

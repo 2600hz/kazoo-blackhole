@@ -49,6 +49,9 @@
         ,id_position/0
         ]).
 
+-export([async_reply/1, set_async_reply/2]).
+-export([authorized/1, set_authorized/1]).
+
 -include("blackhole.hrl").
 
 %% {ClientBinding, AMQPBinding}
@@ -65,13 +68,15 @@
                     ,timestamp = kz_time:now_s() :: kz_time:gregorian_seconds() | '_'
                     ,name :: kz_term:api_binary() | '_'
                     ,metadata :: any() | '_'
-                    ,destination = kz_util:node_hostname() :: kz_term:ne_binary() | '_'
+                    ,destination = kz_nodes:node_hostname() :: kz_term:ne_binary() | '_'
                     ,source :: kz_term:api_binary() | '_'
                     ,errors = [] :: kz_term:ne_binaries() | '_'
                     ,result = 'ok' :: 'ok' | 'error' | 'shutdown' | '_'
                     ,listeners = [] :: list() | '_'
                     ,resp_status = <<"success">> :: kz_term:ne_binary() | '_'
-                    ,resp_data = kz_json:new() :: kz_json:object() | '_'
+                    ,resp_data :: kz_term:api_object() | '_'
+                    ,async_reply = false :: boolean()
+                    ,authorized = false :: boolean()
                     }).
 
 -type context() :: #bh_context{}.
@@ -117,6 +122,8 @@ from_json(Context, JObj) ->
               ,{fun set_req_id/2, kz_json:get_ne_binary_value(<<"request_id">>, JObj, Rand)}
               ,{fun set_name/2, kz_json:get_value(<<"name">>, JObj)}
               ,{fun set_metadata/2, kz_json:get_value(<<"metadata">>, JObj)}
+              ,{fun set_resp_data/2, undefined}
+              ,{fun set_async_reply/2, false}
               ],
     setters(Context, Setters).
 
@@ -159,11 +166,13 @@ setters(Context, Setters) ->
 %% @doc
 %% @end
 %%------------------------------------------------------------------------------
--spec auth_token(context()) -> kz_term:api_ne_binary().
+-spec auth_token(context()) -> kz_term:api_binary().
 auth_token(#bh_context{auth_token=AuthToken}) ->
     AuthToken.
 
--spec set_auth_token(context(), kz_term:ne_binary()) -> context().
+-spec set_auth_token(context(), kz_term:api_ne_binary()) -> context().
+set_auth_token(#bh_context{}=Context, undefined) ->
+    Context;
 set_auth_token(#bh_context{}=Context, AuthToken) ->
     Context#bh_context{auth_token=AuthToken}.
 
@@ -187,6 +196,18 @@ is_superduper_admin(#bh_context{auth_account_id=AccountId}) ->
 %% @doc
 %% @end
 %%------------------------------------------------------------------------------
+-spec authorized(context()) -> boolean().
+authorized(#bh_context{authorized=Authorized}) ->
+    Authorized.
+
+-spec set_authorized(context()) -> context().
+set_authorized(#bh_context{}=Context) ->
+    Context#bh_context{authorized = true}.
+
+%%------------------------------------------------------------------------------
+%% @doc
+%% @end
+%%------------------------------------------------------------------------------
 -spec bindings(context()) -> bindings().
 bindings(#bh_context{bindings=Bds}) -> Bds.
 
@@ -200,7 +221,7 @@ bindings_from_json(JObj) ->
 
 -spec client_bindings(context()) -> kz_term:ne_binaries().
 client_bindings(#bh_context{bindings=Bs}) ->
-    [ClientBinding || {ClientBinding, _AMQPBinding} <- Bs].
+    [ClientBinding || {ClientBinding, _AMQPBindings} <- Bs].
 
 %%------------------------------------------------------------------------------
 %% @doc
@@ -374,7 +395,7 @@ listeners(#bh_context{listeners=BListeners}) ->
 success(#bh_context{errors=[]}) -> 'true';
 success(#bh_context{}) -> 'false'.
 
--spec set_resp_data(context(), kz_json:object()) -> context().
+-spec set_resp_data(context(), kz_term:api_object()) -> context().
 set_resp_data(#bh_context{}=Context, Data) ->
     Context#bh_context{resp_data=Data}.
 
@@ -382,7 +403,7 @@ set_resp_data(#bh_context{}=Context, Data) ->
 set_resp_status(#bh_context{}=Context, Status) ->
     Context#bh_context{resp_status=Status}.
 
--spec resp_data(context()) -> kz_json:object().
+-spec resp_data(context()) -> kz_term:api_object().
 resp_data(#bh_context{resp_data=Data}) ->
     Data.
 
@@ -409,3 +430,11 @@ match_source(<<Source/binary>>, #bh_context{}=Context) ->
 -spec id_position() -> integer().
 id_position() ->
     #bh_context.websocket_session_id.
+
+-spec set_async_reply(context(), boolean()) -> context().
+set_async_reply(#bh_context{}=Context, Async) ->
+    Context#bh_context{async_reply = Async}.
+
+-spec async_reply(context()) -> context().
+async_reply(#bh_context{async_reply = AsyncReply}) ->
+    AsyncReply.
