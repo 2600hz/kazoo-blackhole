@@ -51,9 +51,9 @@ api(Context, Payload) ->
     bh_context:set_async_reply(Context, true).
 
 api_uri() ->
-	Default = <<"http://localhost:8000">>,
-	Key = <<"bh_api_url">>,
-	uri_string:parse(kz_app_config:get_ne_binary(?APP, Key, Default)).
+    Default = <<"http://localhost:8000">>,
+    Key = <<"bh_api_url">>,
+    uri_string:parse(kz_app_config:get_ne_binary(?APP, Key, Default)).
 
 api_call(Context, Payload) ->
     RequestId = bh_context:req_id(Context),
