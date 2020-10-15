@@ -75,8 +75,8 @@
                     ,listeners = [] :: list() | '_'
                     ,resp_status = <<"success">> :: kz_term:ne_binary() | '_'
                     ,resp_data :: kz_term:api_object() | '_'
-                    ,async_reply = false :: boolean()
-                    ,authorized = false :: boolean()
+                    ,async_reply = 'false' :: boolean() | '_'
+                    ,authorized = 'false' :: boolean() | '_'
                     }).
 
 -type context() :: #bh_context{}.
@@ -435,6 +435,6 @@ id_position() ->
 set_async_reply(#bh_context{}=Context, Async) ->
     Context#bh_context{async_reply = Async}.
 
--spec async_reply(context()) -> context().
+-spec async_reply(context()) -> boolean().
 async_reply(#bh_context{async_reply = AsyncReply}) ->
     AsyncReply.
