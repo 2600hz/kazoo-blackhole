@@ -224,7 +224,7 @@ get_context_by_session_id(<<SessionId/binary>>) ->
 %% @doc
 %% @end
 %%------------------------------------------------------------------------------
--spec get_contexts_by_ip(kz_term:ne_binary() | inet:ip_addres()) ->
+-spec get_contexts_by_ip(kz_term:ne_binary() | inet:ip_address()) ->
           [bh_context:context(),...] |
           {'error', 'not_found'}.
 get_contexts_by_ip(<<IP/binary>>) ->
