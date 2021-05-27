@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2011-2020, 2600Hz
+%%% @copyright (C) 2011-2021, 2600Hz
 %%% @doc Token auth module
 %%% This is a simple auth mechanism, once the user has acquired an
 %%% auth token this module will allow access.  This module should be
@@ -43,10 +43,10 @@ init() ->
 -spec authenticate(bh_context:context(), kz_json:object()) -> bh_context:context().
 authenticate(Context, Payload) ->
     case bh_context:authorized(Context) of
-        false ->
+        'false' ->
             Token = bh_context:auth_token(Context),
             authenticate(Token, Context, Payload);
-        true ->
+        'true' ->
             Context
     end.
 

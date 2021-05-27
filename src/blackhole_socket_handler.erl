@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2020, 2600Hz
+%%% @copyright (C) 2012-2021, 2600Hz
 %%% @doc
 %%% @author Karl Anderson
 %%%
@@ -67,32 +67,32 @@ allow_connection(Req, HandlerOpts, Context) ->
                                ,blackhole_tracking:session_count_by_ip(RemoteIP)
                                )
     of
-        true ->
+        'true' ->
             IPBin = kz_network_utils:iptuple_to_binary(RemoteIP),
             bh_context:set_source(Context, IPBin);
-        false ->
+        'false' ->
             {'ok', cowboy_req:reply(429, Req), HandlerOpts}
     end.
 
 maybe_allow_connection(_RemoteIP, 'undefined', _ActiveConns) ->
     %% no max connection limit set
-    true;
+    'true';
 maybe_allow_connection(RemoteIP, MaxConns, ActiveConns) when ActiveConns < MaxConns ->
     lager:debug("allowing connection from ~p (~p of ~p up)", [RemoteIP, ActiveConns, MaxConns]),
-    true;
+    'true';
 maybe_allow_connection(RemoteIP, _MaxConns, ActiveConns) ->
     lager:warning("connection from ~p denied: max limit ~p reached", [RemoteIP, ActiveConns]),
-    false.
+    'false'.
 
 set_session_id(Req, _HandlerOpts, Context) ->
     bh_context:set_websocket_session_id(Context, session_id(Req)).
 
 authenticate(Req, HandlerOpts, Context) ->
     Token = cowboy_req:parse_header(<<"authorization">>, Req),
-    case Token =/= undefined
+    case Token =/= 'undefined'
         andalso kz_auth:validate_token(Token)
     of
-        false -> Context;
+        'false' -> Context;
         {'ok', JObj} ->
             lager:info("token auth is valid, authenticating : ~p", [JObj]),
             AccountId = kz_json:get_ne_value(<<"account_id">>, JObj),

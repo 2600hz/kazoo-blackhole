@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2010-2020, 2600Hz
+%%% @copyright (C) 2010-2021, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,13 +22,12 @@ init() ->
 
 -spec limits(bh_context:context(), kz_json:object()) -> bh_context:context().
 limits(Context, RequestJObj) ->
-    AuthAccountId = bh_context:auth_account_id(Context),
-    maybe_limit(Context, AuthAccountId, kz_json:get_json_value(<<"data">>, RequestJObj)).
+    maybe_limit(Context, kz_json:get_json_value(<<"data">>, RequestJObj)).
 
 %% TODO: limits requests based on:
-maybe_limit(Context, _AuthAccountId, 'undefined') ->
+maybe_limit(Context, 'undefined') ->
     %% no data typically means connection establishment
     Context;
-maybe_limit(Context, _AuthAccountId, _Data) ->
+maybe_limit(Context, _Data) ->
     %% data means limit actions like subscribe
     Context.

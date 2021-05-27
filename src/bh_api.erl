@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2020, 2600Hz
+%%% @copyright (C) 2012-2021, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,28 +27,28 @@ init() ->
 -spec authorize(bh_context:context(), kz_json:object()) -> bh_context:context().
 authorize(Context, _Payload) ->
     case kz_auth_scope:has(bh_context:auth_token(Context), <<"api:tunnel">>) of
-        true -> Context;
-        false -> bh_context:add_error(Context, <<"api not allowed">>)
+        'true' -> Context;
+        'false' -> bh_context:add_error(Context, <<"api not allowed">>)
     end.
 
 -spec validate(bh_context:context(), kz_json:object()) -> bh_context:context().
 validate(Context, Payload) ->
     case api_data_payload(Payload) of
-        undefined -> bh_context:add_error(Context, <<"missing required data object">>);
+        'undefined' -> bh_context:add_error(Context, <<"missing required data object">>);
         _Data -> validate_api(Context, Payload)
     end.
 
 -spec validate_api(bh_context:context(), kz_json:object()) -> bh_context:context().
 validate_api(Context, Payload) ->
     case api_endpoint(Payload) of
-        undefined -> bh_context:add_error(Context, <<"missing endpoint">>);
+        'undefined' -> bh_context:add_error(Context, <<"missing endpoint">>);
         _Data -> Context
     end.
 
 -spec api(bh_context:context(), kz_json:object()) -> bh_context:context().
 api(Context, Payload) ->
     kz_process:spawn(fun api_call/2, [Context, Payload]),
-    bh_context:set_async_reply(Context, true).
+    bh_context:set_async_reply(Context, 'true').
 
 api_uri() ->
     Default = <<"http://localhost:8000">>,
@@ -91,10 +91,10 @@ api_verb(JObj) ->
 
 maybe_fix_endpoint(JObj) ->
     case kz_json:get_ne_binary_value(<<"endpoint">>, data_payload(JObj)) of
-        undefined -> undefined;
+        'undefined' -> 'undefined';
         <<"/", _/binary>> = EP -> EP;
         EP -> <<"/", EP/binary>>
     end.
 
 api_body(JObj) ->
-    kz_json:get_ne_binary_value(<<"body">>, data_payload(JObj), <<>>).
+    kz_json:get_binary_value(<<"body">>, data_payload(JObj), <<>>).

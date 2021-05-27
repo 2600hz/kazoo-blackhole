@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2020, 2600Hz
+%%% @copyright (C) 2012-2021, 2600Hz
 %%% @doc
 %%% @author James Aimonetti
 %%% @author Peter Defebvre
@@ -30,7 +30,6 @@
        ,<<"call.", AccountId/binary, ".", Event/binary, ".", CallId/binary>>
        ).
 -define(BINDING(Event, CallId), <<"call.", Event/binary, ".", CallId/binary>>).
--define(BINDING(Event), ?BINDING(Event, <<"*">>)).
 
 -spec init() -> any().
 init() ->

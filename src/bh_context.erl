@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2020, 2600Hz
+%%% @copyright (C) 2012-2021, 2600Hz
 %%% @doc Helpers for manipulating the #bh_context{} record
 %%% @author Ben Wann
 %%%
@@ -122,8 +122,8 @@ from_json(Context, JObj) ->
               ,{fun set_req_id/2, kz_json:get_ne_binary_value(<<"request_id">>, JObj, Rand)}
               ,{fun set_name/2, kz_json:get_value(<<"name">>, JObj)}
               ,{fun set_metadata/2, kz_json:get_value(<<"metadata">>, JObj)}
-              ,{fun set_resp_data/2, undefined}
-              ,{fun set_async_reply/2, false}
+              ,{fun set_resp_data/2, 'undefined'}
+              ,{fun set_async_reply/2, 'false'}
               ],
     setters(Context, Setters).
 
@@ -166,12 +166,12 @@ setters(Context, Setters) ->
 %% @doc
 %% @end
 %%------------------------------------------------------------------------------
--spec auth_token(context()) -> kz_term:api_binary().
+-spec auth_token(context()) -> kz_term:api_ne_binary().
 auth_token(#bh_context{auth_token=AuthToken}) ->
     AuthToken.
 
 -spec set_auth_token(context(), kz_term:api_ne_binary()) -> context().
-set_auth_token(#bh_context{}=Context, undefined) ->
+set_auth_token(#bh_context{}=Context, 'undefined') ->
     Context;
 set_auth_token(#bh_context{}=Context, AuthToken) ->
     Context#bh_context{auth_token=AuthToken}.
@@ -202,7 +202,7 @@ authorized(#bh_context{authorized=Authorized}) ->
 
 -spec set_authorized(context()) -> context().
 set_authorized(#bh_context{}=Context) ->
-    Context#bh_context{authorized = true}.
+    Context#bh_context{authorized = 'true'}.
 
 %%------------------------------------------------------------------------------
 %% @doc

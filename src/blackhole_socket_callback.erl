@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2010-2020, 2600Hz
+%%% @copyright (C) 2010-2021, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,14 +9,12 @@
 %%%-----------------------------------------------------------------------------
 -module(blackhole_socket_callback).
 
--include("blackhole.hrl").
-
 -export([open/1
         ,recv/2
         ,close/1
         ]).
 
--define(SESSION_KEY(SessionId), {'session', ?MODULE, SessionId}).
+-include("blackhole.hrl").
 
 -type bh_return() :: {'ok', bh_context:context()}.
 
@@ -124,17 +122,21 @@ limits(Context, Action, Payload) ->
 command(Context, Action, Payload) ->
     Routing = <<"blackhole.command.", Action/binary>>,
     Ctx = handle_result(Context, blackhole_bindings:map(Routing, [Context, Payload])),
-    case bh_context:success(Ctx)
-        andalso not bh_context:async_reply(Ctx)
-        andalso bh_context:resp_data(Ctx)
-    of
-        undefined -> Ctx;
-        false -> Ctx;
+
+    command_if_data(Ctx
+                   ,bh_context:success(Ctx)
+                    andalso not bh_context:async_reply(Ctx)
+                   ).
+
+command_if_data(Context, 'false') -> Context;
+command_if_data(Context, 'true') ->
+    case bh_context:resp_data(Context) of
+        'undefined' -> Context;
         Data ->
-            SessionPid = bh_context:websocket_pid(Ctx),
-            RequestId = bh_context:req_id(Ctx),
+            SessionPid = bh_context:websocket_pid(Context),
+            RequestId = bh_context:req_id(Context),
             blackhole_data_emitter:reply(SessionPid, RequestId, <<"success">>, Data),
-            bh_context:set_resp_data(Ctx, undefined)
+            bh_context:set_resp_data(Context, 'undefined')
     end.
 
 finish(Context, Action, _Payload) ->

@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2020, 2600Hz
+%%% @copyright (C) 2012-2021, 2600Hz
 %%% @doc
 %%% @author Karl Anderson
 %%% @author James Aimonetti
@@ -23,8 +23,7 @@
 
 -define(SERVER, ?MODULE).
 
--define(CHILDREN, [?CACHE(?CACHE_NAME)
-                  ,?WORKER('blackhole_listener')
+-define(CHILDREN, [?WORKER('blackhole_listener')
                   ,?WORKER('blackhole_tracking')
                   ,?WORKER('blackhole_bindings')
                   ,?WORKER('blackhole_init')
