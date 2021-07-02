@@ -1,4 +1,4 @@
-# Send requests to Crossbar
+# Crossbar API tunneling
 
 This API provide a way to send requests to Crossbar (tunneling Crossbar HTTP request through WebSocket) and receive its response later.
 

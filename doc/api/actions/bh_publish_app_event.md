@@ -1,4 +1,4 @@
-# Send requests to Crossbar
+# Publish WebSocket Application Events
 
 This API provide a way publish an event to all WebSocket clients that are subscribed to this event. In some sort, this makes it possible so that a WebSocket application can send messages to all of its instances using Blackhole.
 

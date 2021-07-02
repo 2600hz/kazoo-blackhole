@@ -37,7 +37,7 @@ Please keep in mind you web browser should have access to the Blackhole IP addre
     // {"action":"reply","request_id":"{RANDOM_UUID}","status":"success","data":{"response":"pong"}}
 ```
 
-You may also want to use [example_client.html](example_client.html) file, write you code and open it in a web browser.
+You may also want to use [example_client.html](https://github.com/2600hz/kazoo-blackhole/blob/master/doc/api/example_client.html) file, write you code and open it in a web browser.
 
 ## Blackhole API Basics
 

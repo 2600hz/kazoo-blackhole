@@ -1,4 +1,4 @@
-# Blackhole - WebSocket API
+# Blackhole - WebSocket Server
 
 Blackhole creates a point of contact between KAZOO and your application or system, using WebSocket protocol. This is a two-way communication channel and enables you to interact with KAZOO and/or subscribe to available events and get them stream to your connected session(s).
 
@@ -8,6 +8,6 @@ Blackhole provides the server and the API that your application can connect and 
 
 ## Where to look
 
-* Read how to use [Blackhole API](api/README.md)
-* [How to start Blackhole](blackhole_sys_admin.md)
-* Common troubleshootings
+* [How to use Blackhole API](api/README.md)
+* [Administrating Blackhole](blackhole_sys_admin.md)
+* [Troubleshootings](troubleshootings.md)

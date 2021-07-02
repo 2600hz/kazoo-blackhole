@@ -1,4 +1,4 @@
-# Basic Trouble Shooting
+# Basic Troubleshooting
 
 ## I'm getting replies like "failed to authenticate token"
 
