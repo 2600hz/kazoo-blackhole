@@ -33,7 +33,7 @@ init() ->
     blackhole_bindings:bind(<<"blackhole.events.bindings.app_event">>, ?MODULE, 'bindings').
 
 init_bindings() ->
-    Bindings = binding_key([<<"{APPLICATION}">>, <<"{CATEGORY}">>, <<"{SUBCATEGORY}">>]),
+    Bindings = [binding_key([<<"{APPLICATION}">>, <<"{CATEGORY}">>, <<"{SUBCATEGORY}">>])],
     case kapps_config:set_default(?CONFIG_CAT, [<<"bindings">>, <<"app_event">>], Bindings) of
         {'ok', _} -> lager:debug("initialized app_event bindings");
         {'error', _E} -> lager:info("failed to initialize app_event bindings: ~p", [_E])
@@ -58,7 +58,7 @@ bindings(_Context, #{account_id := AccountId
                     ,keys := [Application, Category, SubCategory | Subscription] = Binding
                     }=Map) ->
     Requested = binding_key(Binding),
-    Subscribed = [<<"websockets.", (binding_key([Application, AccountId, Category, SubCategory | Subscription]))/binary>>],
+    Subscribed = [kapi_websockets:create_app_event_key(Application, AccountId, Category, SubCategory, Subscription)],
     Listeners = [{'amqp', 'websockets', event_binding_options(Application, AccountId, Category, SubCategory, Subscription)}],
     Map#{requested => Requested
         ,subscribed => Subscribed

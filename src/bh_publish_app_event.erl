@@ -112,11 +112,15 @@ event_payload(Context, Data) ->
 
 -spec subscriptions(kz_json:object()) -> kz_term:ne_binaries().
 subscriptions(Data) ->
-    Subscription = kz_json:get_ne_binary_value(<<"subscription">>, Data),
-    case kz_json:get_list_value(<<"subscriptions">>, Data, []) of
-        [] when Subscription =/= 'undefined' -> Subscription;
-        [] -> [];
-        Subscriptions -> Subscriptions
+    %% Subscription = kz_json:get_ne_binary_value(<<"subscription">>, Data),
+    %% case kz_json:get_list_value(<<"subscriptions">>, Data, []) of
+    %%     [] when Subscription =/= 'undefined' -> [Subscription];
+    %%     [] -> [];
+    %%     Subscriptions -> Subscriptions
+    %% end.
+    case kz_json:get_ne_binary_value(<<"subscription">>, Data) of
+        'undefined' -> [];
+        Subscription -> [Subscription]
     end.
 
 -spec account_id(kz_json:object(), Default) -> kz_term:ne_binary() | Default.
