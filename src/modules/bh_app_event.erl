@@ -40,11 +40,6 @@ init_bindings() ->
     end.
 
 -spec authorize(bh_context:context(), map()) -> bh_context:context().
-authorize(Context, #{keys := [_Application, _Category, _SubCategory | _]}) ->
-    case bh_context:is_superduper_admin(Context) of
-        'true' -> Context;
-        'false' -> bh_context:add_error(Context, <<"unauthorized wildcard for account id">>)
-    end;
 authorize(Context, _) -> Context.
 
 -spec validate(bh_context:context(), map()) -> bh_context:context().

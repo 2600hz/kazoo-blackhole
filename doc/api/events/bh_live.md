@@ -2,6 +2,10 @@
 
 Receive Live Conference (verto?) related events.
 
+## Authorization
+
+Your Auth Token needs to have `live:all` or `live.conference` scope to access these events. Assign these scopes to users.
+
 ## Bindings
 
 Replace `{CALL_ID}` with the actual Call-ID of a call (if known), or use `*` to receive the events for all calls.

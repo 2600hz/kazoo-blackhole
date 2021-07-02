@@ -10,4 +10,4 @@ Blackhole provides the server and the API that your application can connect and 
 
 * [How to use Blackhole API](api/README.md)
 * [Administrating Blackhole](blackhole_sys_admin.md)
-* [Troubleshootings](troubleshootings.md)
+* [Troubleshootings](troubleshooting.md)

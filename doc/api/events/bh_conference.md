@@ -2,6 +2,10 @@
 
 Receive conference related events.
 
+## Authorization
+
+Binding to all Conference-ID requires superduper admin access.
+
 ## Bindings
 
 Replace `{CALL_ID}` with the actual Call-ID of a call (if known), or use `*` to receive the events for all conferences.

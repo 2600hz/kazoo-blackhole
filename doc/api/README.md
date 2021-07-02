@@ -1,4 +1,4 @@
-# Blackhole WebSocket API
+# How to use Blackhole API
 
 ## Quick Start
 
