@@ -25,11 +25,7 @@ init() ->
     'ok'.
 
 -spec authorize(bh_context:context(), kz_json:object()) -> bh_context:context().
-authorize(Context, _Payload) ->
-    case kz_auth_scope:has(bh_context:auth_token(Context), <<"api:tunnel">>) of
-        true -> Context;
-        false -> bh_context:add_error(Context, <<"api not allowed">>)
-    end.
+authorize(Context, _Payload) -> Context.
 
 -spec validate(bh_context:context(), kz_json:object()) -> bh_context:context().
 validate(Context, Payload) ->

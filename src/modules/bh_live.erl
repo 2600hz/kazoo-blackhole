@@ -57,13 +57,7 @@ init_bindings() ->
     end.
 
 -spec authorize(bh_context:context(), map()) -> bh_context:context().
-authorize(Context, #{keys := [Category | _Rest]}) ->
-    case kz_auth_scope:any(bh_context:auth_token(Context), ?LIVE_SCOPES(Category)) of
-        'true' -> Context;
-        'false' -> bh_context:add_error(Context, <<"unauthorized for live ", Category/binary>>)
-    end;
-authorize(Context, _) ->
-    bh_context:add_error(Context, <<"unauthorized for live">>).
+authorize(Context, _) -> Context.
 
 -spec validate(bh_context:context(), map()) -> bh_context:context().
 validate(Context, #{keys := [<<"conference">>, ?ALL, _, _]}) ->
