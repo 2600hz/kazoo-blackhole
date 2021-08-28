@@ -1,7 +1,6 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2020, 2600Hz
+%%% @copyright (C) 2012-2021, 2600Hz
 %%% @doc
-%%%
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
 %%% file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -18,26 +17,28 @@
 
 -include("blackhole.hrl").
 
+-define(CATEGORY, <<"conference">>).
+
 -define(LIVE_EVENTS
        ,[<<"array">>
         ,<<"broadcast">>
         ,<<"caption">>
         ,<<"info">>
         ,<<"chat">>
-        ,<<"setup">>
         ]).
 
--define(ACCOUNT_BINDING(Event, AccountId, ConferenceId, CallId)
-       ,<<"live.conference.",Event/binary,".", AccountId/binary, ".", ConferenceId/binary, ".", CallId/binary>>
+-define(ACCOUNT_BINDING(AccountId, Event, Id)
+       ,kz_binary:join(["live", ?CATEGORY, AccountId, Event, Id], <<".">>)
        ).
 
--define(BINDING(Event, ConferenceId, CallId)
-       ,<<"live.conference.", Event/binary, ".", ConferenceId/binary, ".", CallId/binary>>
+-define(BINDING(Event, Id)
+       ,kz_binary:join(["live", ?CATEGORY, Event, Id], <<".">>)
        ).
 
--define(EVENT_BINDINGS(ConferenceId, CallId)
-       ,lists:foldl(fun(E, Acc) -> [?BINDING(ConferenceId, CallId, E) | Acc] end, [], ?LIVE_EVENTS)
+-define(EVENT_BINDINGS(Id)
+       ,lists:foldl(fun(Event, Acc) -> [?BINDING(Event, Id) | Acc] end, [], ?LIVE_EVENTS)
        ).
+
 -define(ALL, <<"*">>).
 
 -define(LIVE_SCOPES(C), [<<"live:all">>, <<"live:", C/binary>>]).
@@ -47,10 +48,10 @@ init() ->
     init_bindings(),
     _ = blackhole_bindings:bind(<<"blackhole.events.authorize.live">>, ?MODULE, 'authorize'),
     _ = blackhole_bindings:bind(<<"blackhole.events.validate.live">>, ?MODULE, 'validate'),
-    blackhole_bindings:bind(<<"blackhole.events.bindings.live">>, ?MODULE, 'bindings').
+    _ = blackhole_bindings:bind(<<"blackhole.events.bindings.live">>, ?MODULE, 'bindings').
 
 init_bindings() ->
-    Bindings = ?EVENT_BINDINGS(<<"{CONFERENCE_ID}">>, <<"{CALL_ID}">>),
+    Bindings = ?EVENT_BINDINGS(<<"*">>),
     case kapps_config:set_default(?CONFIG_CAT, [<<"bindings">>, <<"live">>], Bindings) of
         {'ok', _} -> lager:debug("initialized live bindings");
         {'error', _E} -> lager:info("failed to initialize conference bindings: ~p", [_E])
@@ -60,9 +61,9 @@ init_bindings() ->
 authorize(Context, _) -> Context.
 
 -spec validate(bh_context:context(), map()) -> bh_context:context().
-validate(Context, #{keys := [<<"conference">>, ?ALL, _, _]}) ->
+validate(Context, #{keys := [?CATEGORY, ?ALL, _]}) ->
     Context;
-validate(Context, #{keys := [<<"conference">>, Event, _, _]}) ->
+validate(Context, #{keys := [?CATEGORY, Event, _]}) ->
     case lists:member(Event, ?LIVE_EVENTS) of
         'false' ->
             bh_context:add_error(Context, <<"Unsupported live event ",Event/binary>>);
@@ -73,11 +74,11 @@ validate(Context, #{keys := Keys}) ->
 
 -spec bindings(bh_context:context(), map()) -> map().
 bindings(_Context, #{account_id := AccountId
-                    ,keys := [<<"conference">>, Event, ConferenceId, InstanceId]
+                    ,keys := [?CATEGORY, Event, Id]
                     }=Map) ->
-    Requested = ?BINDING(Event, ConferenceId, InstanceId),
-    Subscribed = [?ACCOUNT_BINDING(Event, AccountId, ConferenceId, InstanceId)],
-    Listeners = [{'amqp', 'bind', event_binding_options(AccountId, ConferenceId, InstanceId, Event)}],
+    Requested = ?BINDING(Event, Id),
+    Subscribed = [?ACCOUNT_BINDING(AccountId, Event, Id)],
+    Listeners = [{'amqp', 'bind', event_binding_options(AccountId, Event, Id)}],
     Map#{requested => Requested
         ,subscribed => Subscribed
         ,listeners => Listeners
@@ -87,9 +88,13 @@ bindings(_Context, #{account_id := AccountId
 %%% Internal functions
 %%%=============================================================================
 
--spec event_binding_options(kz_term:ne_binary(), kz_term:ne_binary(), kz_term:ne_binary(), kz_term:ne_binary()) -> kz_term:proplist().
-event_binding_options(AccountId, ConferenceId, InstanceId, Event) ->
+%%------------------------------------------------------------------------------
+%% @doc
+%% @end
+%%------------------------------------------------------------------------------
+-spec event_binding_options(kz_term:ne_binary(), kz_term:ne_binary(), kz_term:ne_binary()) -> kz_term:proplist().
+event_binding_options(AccountId, Event, Id) ->
     [{'exchange', [{name, <<"live">>}, {type, <<"topic">>}]}
-    ,{'routing', kz_binary:join([<<"live">>, <<"conference">>, Event, AccountId, ConferenceId, InstanceId], <<".">>)}
+    ,{'routing', kz_binary:join(["live", ?CATEGORY, AccountId, Event, Id], <<".">>)}
     ,'federate'
     ].
