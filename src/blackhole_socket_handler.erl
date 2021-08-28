@@ -106,6 +106,13 @@ authenticate(Req, HandlerOpts, Context) ->
             {'ok', cowboy_req:reply(403, Req), HandlerOpts}
     end.
 
+-spec maybe_start_keep_alive() -> ok | reference().
+maybe_start_keep_alive() ->
+    case kz_app_config:get_boolean(?APP, <<"keep_client_alive">>, false) of
+        true -> erlang:send_after(1 * ?MILLISECONDS_IN_MINUTE, self(), 'keep_alive');
+        false -> ok
+    end.
+
 -spec terminate(any(), cowboy_req:req(), bh_context:context() | cowboy_websocket:opts())  -> 'ok'.
 terminate(_Reason, Req, Opts) when is_list(Opts) ->
     lager:info("socket for session ~s down early: ~p", [session_id(Req), _Reason]);
@@ -121,6 +128,7 @@ websocket_init(Context) ->
                                       ,bh_context:authorized(Context)
                                       ]),
     Ctx = bh_context:set_websocket_pid(Context, self()),
+    _ = maybe_start_keep_alive(),
     {'ok', _NewContext} = blackhole_socket_callback:open(Ctx).
 
 -spec websocket_handle(any(), bh_context:context()) ->
@@ -136,6 +144,8 @@ websocket_handle({'text', Data}, Context) ->
     end;
 websocket_handle('ping', Context) ->
     {'ok', Context, 'hibernate'};
+websocket_handle('pong', Context) ->
+    {'ok', Context, 'hibernate'};
 websocket_handle(_Other, Context) ->
     lager:debug("not handling message : ~p", [_Other]),
     {'ok', Context, 'hibernate'}.
@@ -149,6 +159,9 @@ websocket_info({'send_data', Data}, Context) ->
     {'reply', {'text', kz_json:encode(Data)}, Context};
 websocket_info('pong', Context) ->
     {'reply', 'pong', Context};
+websocket_info('keep_alive', Context) ->
+    erlang:send_after(1 * ?MILLISECONDS_IN_MINUTE, self(), 'keep_alive'),
+    {'reply', 'ping', Context};
 websocket_info(Info, Context) ->
     lager:info("unhandled websocket info: ~p", [Info]),
     {'ok', Context}.
