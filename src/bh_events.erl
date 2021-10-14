@@ -181,19 +181,20 @@ add_event_bindings(Context, BindingResults) ->
 add_event_bindings_fold(#{requested := ClientBinding
                          ,subscribed := AMQPBindings
                          ,listeners := Listeners
-                         }
+                         } = Bindings
                        ,{Context, Subs}
                        ) ->
+    Module = maps:get(module, Bindings, ?MODULE),
     SessionBindings = bh_context:bindings(Context),
     Subscribe = [{ClientBinding, AMQPBindings}] -- SessionBindings,
     NewListeners = Listeners -- bh_context:listeners(Context),
 
-    lists:foreach(fun(S) -> bh_bind(Context, S) end, Subscribe),
+    lists:foreach(fun(S) -> bh_bind(Context, Module, S) end, Subscribe),
     blackhole_listener:add_bindings(NewListeners),
     Ctx = bh_context:add_listeners(Context, NewListeners),
     {bh_context:set_bindings(Ctx, SessionBindings ++ Subscribe), Subs ++ Subscribe}.
 
-bh_bind(Context, ClientBinding, AMQPBinding) ->
+bh_bind(Context, Module, ClientBinding, AMQPBinding) ->
     SessionPid = bh_context:websocket_pid(Context),
     SessionId = bh_context:websocket_session_id(Context),
     Binding =  #{subscribed_key => ClientBinding
@@ -202,10 +203,10 @@ bh_bind(Context, ClientBinding, AMQPBinding) ->
                 ,session_id => SessionId
                 },
     BHBinding = <<"blackhole.event.", AMQPBinding/binary>>,
-    blackhole_bindings:bind(BHBinding, ?MODULE, 'event', Binding).
+    blackhole_bindings:bind(BHBinding, Module, 'event', Binding).
 
-bh_bind(Context, {ClientBinding, AMQPBindings}) ->
-    lists:foreach(fun(B) -> bh_bind(Context, ClientBinding, B) end, AMQPBindings).
+bh_bind(Context, Module, {ClientBinding, AMQPBindings}) ->
+    lists:foreach(fun(B) -> bh_bind(Context, Module, ClientBinding, B) end, AMQPBindings).
 
 -spec remove_event_bindings(bh_context:context(), [map(),...]) -> bh_context:context().
 remove_event_bindings(Context, BindingResults) ->
