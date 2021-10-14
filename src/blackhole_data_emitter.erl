@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2020, 2600Hz
+%%% @copyright (C) 2012-2021, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,8 @@
 -include("blackhole.hrl").
 
 -export([event/4]).
--export([reply/4]).
+-export([reply/3, reply/4]).
+-export([send/2]).
 
 -define(MAX_QUEUED_MESSAGES, kapps_config:get_integer(?CONFIG_CAT, <<"max_queued_messages">>, 50)).
 
@@ -33,6 +34,10 @@ event(#{subscribed_key := SubscribedKey
     lager:debug("sending event with routing key ~s to session PID ~p", [RK, SessionPid]),
     maybe_send(SessionPid, kz_json:from_list(Msg)).
 
+-spec reply(pid(), kz_term:ne_binary(), kz_json:object()) -> 'ok'.
+reply(SessionPid, RequestId, Data) ->
+    reply(SessionPid, RequestId, undefined, Data).
+
 -spec reply(pid(), kz_term:ne_binary(), kz_term:ne_binary(), kz_json:object()) -> 'ok'.
 reply(SessionPid, RequestId, Status, Data) ->
     lager:debug("sending reply data: ~s : ~s : ~p", [RequestId, Status, Data]),
@@ -42,6 +47,10 @@ reply(SessionPid, RequestId, Status, Data) ->
           ,{<<"data">>, Data}
           ],
     maybe_send(SessionPid, kz_json:from_list(Msg)).
+
+-spec send(pid(), kz_json:object()) -> 'ok'.
+send(SessionPid, Data) ->
+    maybe_send(SessionPid, Data).
 
 
 maybe_send(SessionPid, Data) ->
