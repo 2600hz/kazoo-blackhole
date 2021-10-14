@@ -13,9 +13,10 @@
         ,authorize/2
         ,validate/2
         ,bindings/2
-        ,authorize_broadcast/2
-        ,validate_broadcast/2
-        ,broadcast/2
+        ,authorize_publish/2
+        ,validate_publish/2
+        ,publish/2
+        ,event/3
         ]).
 
 -include("blackhole.hrl").
@@ -50,9 +51,9 @@ init() ->
     _ = blackhole_bindings:bind(<<"blackhole.events.authorize.relay">>, ?MODULE, 'authorize'),
     _ = blackhole_bindings:bind(<<"blackhole.events.validate.relay">>, ?MODULE, 'validate'),
     _ = blackhole_bindings:bind(<<"blackhole.events.bindings.relay">>, ?MODULE, 'bindings'),
-    _ = blackhole_bindings:bind(<<"blackhole.authorize.relay.broadcast">>, ?MODULE, 'authorize_broadcast'),
-    _ = blackhole_bindings:bind(<<"blackhole.validate.relay.broadcast">>, ?MODULE, 'validate_broadcast'),
-    _ = blackhole_bindings:bind(<<"blackhole.command.relay.broadcast">>, ?MODULE, 'broadcast').
+    _ = blackhole_bindings:bind(<<"blackhole.authorize.relay.publish">>, ?MODULE, 'authorize_publish'),
+    _ = blackhole_bindings:bind(<<"blackhole.validate.relay.publish">>, ?MODULE, 'validate_publish'),
+    _ = blackhole_bindings:bind(<<"blackhole.command.relay.publish">>, ?MODULE, 'publish').
 
 init_bindings() ->
     Bindings = ?EVENT_BINDINGS(<<"*">>),
@@ -88,25 +89,32 @@ bindings(Context, #{account_id := AccountId
     Map#{requested => Requested
         ,subscribed => Subscribed
         ,listeners => Listeners
+        ,module => ?MODULE
         }.
 
--spec authorize_broadcast(bh_context:context(), kz_json:object()) -> bh_context:context().
-authorize_broadcast(Context, _Payload) -> Context.
+-spec authorize_publish(bh_context:context(), kz_json:object()) -> bh_context:context().
+authorize_publish(Context, _Payload) -> Context.
 
--spec validate_broadcast(bh_context:context(), kz_json:object()) -> bh_context:context().
-validate_broadcast(Context, Payload) ->
-    case broadcast_data(Payload) =:= undefined
-        orelse broadcast_params(Payload) =:= undefined
+-spec validate_publish(bh_context:context(), kz_json:object()) -> bh_context:context().
+validate_publish(Context, Payload) ->
+    case publish_data(Payload) =:= undefined
+        orelse publish_params(Payload) =:= undefined
     of
         true -> bh_context:add_error(Context, <<"missing required data object">>);
         false -> Context
     end.
 
--spec broadcast(bh_context:context(), kz_json:object()) -> bh_context:context().
-broadcast(Context, Payload) ->
-    JObj = kz_json:set_values(kz_api:default_headers(?APP_NAME, ?APP_VERSION), broadcast_set_session(Context, broadcast_params(Payload))),
-    ServerId = kz_api:server_id(broadcast_data(Payload)),
-    case publish_broadcast(ServerId, JObj) of
+-spec publish(bh_context:context(), kz_json:object()) -> bh_context:context().
+publish(Context, Payload) ->
+    ServerId = gen_listener:queue_name(erlang:whereis(blackhole_listener)),
+    MsgId = kz_json:get_ne_binary_value(<<"request_id">>, Payload, kz_binary:rand_uuid()),
+    Funs = [{fun set_session/2, Context}
+           ,{fun kz_json:set_value/3, <<"Msg-ID">>, MsgId}
+           ,{fun kz_json:set_values/2, kz_api:default_headers(?APP_NAME, ?APP_VERSION, ServerId)}
+           ],
+    JObj = kz_json:exec(Funs, publish_params(Payload)),
+    TargetId = kz_api:server_id(publish_data(Payload)),
+    case publish_broadcast(TargetId, JObj) of
         ok -> bh_context:set_resp_status(Context, <<"success">>);
         {error, Error} -> bh_context:add_error(Context, Error)
     end.
@@ -126,16 +134,16 @@ event_binding_options(AccountId, Event, Id) ->
     ,'federate'
     ].
 
-broadcast_params(JObj) ->
-    kz_json:get_json_value(<<"params">>, broadcast_data(JObj)).
+publish_params(JObj) ->
+    kz_json:get_json_value(<<"params">>, publish_data(JObj)).
 
-broadcast_data(JObj) ->
+publish_data(JObj) ->
     kz_json:get_json_value(<<"data">>, JObj).
 
-broadcast_set_session(Context, JObj) ->
+set_session(Context, JObj) ->
     {ok, Claims} = kz_auth:validate_token(bh_context:auth_token(Context)),
     Id = kz_json:get_ne_binary_value(<<"id">>, Claims),
-    kz_json:set_value(<<"relay_id">>, Id, JObj).
+    kz_json:set_value(<<"Relay-ID">>, Id, JObj).
 
 -spec publish_broadcast(kz_term:api_ne_binary(), kz_json:object()) -> 'ok' | {error, any()}.
 publish_broadcast(undefined, _API) ->
@@ -147,3 +155,16 @@ publish_broadcast(ServerId, API) ->
 -spec build(kz_term:proplist()) -> kz_api:api_formatter_return().
 build(Props) ->
     kz_api:build_message(Props, props:get_keys(Props), []).
+
+-spec event(map(), kz_term:ne_binary(), kz_json:object()) -> 'ok'.
+event(Binding, RK, EventJObj) ->
+    #{session_pid := SessionPid} = Binding,
+    kz_log:put_callid(EventJObj),
+    Data = kz_api:public_fields(EventJObj),
+    NormalizedData = kz_json:normalize_jobj(Data),
+    Payload = [{<<"action">>, <<"relay">>}
+              ,{<<"relay_key">>, RK}
+              ,{<<"relay">>, NormalizedData}
+              ],
+    JObj = kz_json:from_list(Payload),
+    blackhole_data_emitter:send(SessionPid, JObj).
