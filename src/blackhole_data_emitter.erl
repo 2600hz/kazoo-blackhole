@@ -36,9 +36,9 @@ event(#{subscribed_key := SubscribedKey
 
 -spec reply(pid(), kz_term:ne_binary(), kz_json:object()) -> 'ok'.
 reply(SessionPid, RequestId, Data) ->
-    reply(SessionPid, RequestId, undefined, Data).
+    reply(SessionPid, RequestId, 'undefined', Data).
 
--spec reply(pid(), kz_term:ne_binary(), kz_term:ne_binary(), kz_json:object()) -> 'ok'.
+-spec reply(pid(), kz_term:ne_binary(), kz_term:api_ne_binary(), kz_json:object()) -> 'ok'.
 reply(SessionPid, RequestId, Status, Data) ->
     lager:debug("sending reply data: ~s : ~s : ~p", [RequestId, Status, Data]),
     Msg = [{<<"action">>, <<"reply">>}
@@ -51,7 +51,6 @@ reply(SessionPid, RequestId, Status, Data) ->
 -spec send(pid(), kz_json:object()) -> 'ok'.
 send(SessionPid, Data) ->
     maybe_send(SessionPid, Data).
-
 
 maybe_send(SessionPid, Data) ->
     maybe_send(SessionPid, Data, process_info(SessionPid, ['message_queue_len'])).
