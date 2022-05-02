@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2021, 2600Hz
+%%% @copyright (C) 2012-2022, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -81,8 +81,8 @@ validate(Context, #{keys := Keys}) ->
 bindings(Context, #{account_id := AccountId
                    ,keys := [Event]
                    }=Map) ->
-    {ok, Claims} = kz_auth:validate_token(bh_context:auth_token(Context)),
-    Id = kz_json:get_ne_binary_value(<<"id">>, Claims),
+    {'ok', Claims} = kz_auth:validate_token(bh_context:auth_token(Context)),
+    Id = kz_doc:id(Claims),
     Requested = ?BINDING(Event, Id),
     Subscribed = [?ACCOUNT_BINDING(AccountId, Event, Id)],
     Listeners = [{'amqp', 'bind', event_binding_options(AccountId, Event, Id)}],
@@ -97,16 +97,16 @@ authorize_publish(Context, _Payload) -> Context.
 
 -spec validate_publish(bh_context:context(), kz_json:object()) -> bh_context:context().
 validate_publish(Context, Payload) ->
-    case publish_data(Payload) =:= undefined
-        orelse publish_params(Payload) =:= undefined
+    case publish_data(Payload) =:= 'undefined'
+        orelse publish_params(Payload) =:= 'undefined'
     of
-        true -> bh_context:add_error(Context, <<"missing required data object">>);
-        false -> Context
+        'true' -> bh_context:add_error(Context, <<"missing required data object">>);
+        'false' -> Context
     end.
 
 -spec publish(bh_context:context(), kz_json:object()) -> bh_context:context().
 publish(Context, Payload) ->
-    ServerId = gen_listener:queue_name(erlang:whereis(blackhole_listener)),
+    ServerId = gen_listener:queue_name(erlang:whereis('blackhole_listener')),
     MsgId = kz_json:get_ne_binary_value(<<"request_id">>, Payload, kz_binary:rand_uuid()),
     Funs = [{fun set_session/2, Context}
            ,{fun kz_json:set_value/3, <<"Msg-ID">>, MsgId}
@@ -115,8 +115,8 @@ publish(Context, Payload) ->
     JObj = kz_json:exec(Funs, publish_params(Payload)),
     TargetId = kz_api:server_id(publish_data(Payload)),
     case publish_broadcast(TargetId, JObj) of
-        ok -> bh_context:set_resp_status(Context, <<"success">>);
-        {error, Error} -> bh_context:add_error(Context, Error)
+        'ok' -> bh_context:set_resp_status(Context, <<"success">>);
+        {'error', Error} -> bh_context:add_error(Context, Error)
     end.
 
 %%%=============================================================================
@@ -129,7 +129,7 @@ publish(Context, Payload) ->
 %%------------------------------------------------------------------------------
 -spec event_binding_options(kz_term:ne_binary(), kz_term:ne_binary(), kz_term:ne_binary()) -> kz_term:proplist().
 event_binding_options(AccountId, Event, Id) ->
-    [{'exchange', [{name, <<"live">>}, {type, <<"topic">>}]}
+    [{'exchange', [{'name', <<"live">>}, {'type', <<"topic">>}]}
     ,{'routing', kz_binary:join([?CATEGORY, AccountId, Event, Id], <<".">>)}
     ,'federate'
     ].
@@ -141,13 +141,13 @@ publish_data(JObj) ->
     kz_json:get_json_value(<<"data">>, JObj).
 
 set_session(Context, JObj) ->
-    {ok, Claims} = kz_auth:validate_token(bh_context:auth_token(Context)),
-    Id = kz_json:get_ne_binary_value(<<"id">>, Claims),
+    {'ok', Claims} = kz_auth:validate_token(bh_context:auth_token(Context)),
+    Id = kz_doc:id(Claims),
     kz_json:set_value(<<"Relay-ID">>, Id, JObj).
 
--spec publish_broadcast(kz_term:api_ne_binary(), kz_json:object()) -> 'ok' | {error, any()}.
-publish_broadcast(undefined, _API) ->
-    {error, <<"no server_id to publish dialog">>};
+-spec publish_broadcast(kz_term:api_ne_binary(), kz_json:object()) -> 'ok' | {'error', any()}.
+publish_broadcast('undefined', _API) ->
+    {'error', <<"no server_id to publish dialog">>};
 publish_broadcast(ServerId, API) ->
     {'ok', Payload} = kz_api:prepare_api_payload(kz_json:set_values(?BROADCAST_REQ_VALUES, API), [], fun build/1),
     kz_amqp_util:targeted_publish(ServerId, Payload).

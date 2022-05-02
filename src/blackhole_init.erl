@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2011-2020, 2600Hz
+%%% @copyright (C) 2011-2022, 2600Hz
 %%% @doc
 %%% @author Karl Anderson
 %%% @author James Aimonetti
@@ -108,38 +108,36 @@ start_ssl(Dispatch, IP) ->
             ReqTimeout = kapps_config:get_integer(?CONFIG_CAT, <<"request_timeout_ms">>, 10 * ?MILLISECONDS_IN_SECOND),
             Workers = kapps_config:get_integer(?CONFIG_CAT, <<"ssl_workers">>, 100),
 
-            try
-                lager:info("trying to bind SSL WEBSOCKET server to address ~s port ~b"
-                          ,[inet:ntoa(IP)
-                           ,props:get_value('port', SSLOpts)
-                           ]
-                          ),
-                cowboy:start_tls('blackhole_socket_handler_ssl'
-                                ,#{'socket_opts' => ?BASE_TRANSPORT_OPTIONS(IP) ++ SSLOpts
-                                  ,'num_acceptors' => Workers
-                                  }
-                                ,#{'env' => #{'dispatch' => Dispatch
-                                             ,'timeout' => ReqTimeout
-                                             }
-                                  ,'stream_handlers' => maybe_add_compression_handler()
-                                  }
-                                )
-            of
-                {'ok', _} ->
-                    lager:info("started SSL WEBSOCKET server on port ~b", [props:get_value('port', SSLOpts)]);
-                {'error', {'already_started', _P}} ->
-                    lager:info("already started SSL WEBSOCKET server on port ~b at ~p"
-                              ,[props:get_value('port', SSLOpts), _P]
-                              )
-            catch
-                'throw':{'invalid_file', _File} ->
-                    lager:info("SSL disabled: failed to find ~s", [_File]);
-                _E:_R ->
-                    lager:warning("crashed starting SSL WEBSOCKET server: ~s: ~p", [_E, _R])
-            end
+            start_ssl(Dispatch, IP, SSLOpts, Workers, ReqTimeout)
     catch
+        'throw':{'invalid_file', _File} ->
+            lager:info("SSL disabled: failed to find ~s", [_File]);
         'throw':_E ->
             lager:warning("failed to start SSL WEBSOCKET server: ~p", [_E])
+    end.
+
+start_ssl(Dispatch, IP, SSLOpts, Workers, ReqTimeout) ->
+    lager:info("trying to bind SSL WEBSOCKET server to address ~s port ~b"
+              ,[inet:ntoa(IP), props:get_value('port', SSLOpts)]
+              ),
+
+    case cowboy:start_tls('blackhole_socket_handler_ssl'
+                         ,#{'socket_opts' => ?BASE_TRANSPORT_OPTIONS(IP) ++ SSLOpts
+                           ,'num_acceptors' => Workers
+                           }
+                         ,#{'env' => #{'dispatch' => Dispatch
+                                      ,'timeout' => ReqTimeout
+                                      }
+                           ,'stream_handlers' => maybe_add_compression_handler()
+                           }
+                         )
+    of
+        {'ok', _} ->
+            lager:info("started SSL WEBSOCKET server on port ~b", [props:get_value('port', SSLOpts)]);
+        {'error', {'already_started', _P}} ->
+            lager:info("already started SSL WEBSOCKET server on port ~b at ~p"
+                      ,[props:get_value('port', SSLOpts), _P]
+                      )
     end.
 
 -spec ssl_opts(list()) -> kz_term:proplist().

@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2021, 2600Hz
+%%% @copyright (C) 2012-2022, 2600Hz
 %%% @doc
 %%% @author Karl Anderson
 %%%
@@ -60,7 +60,8 @@ check_subprotocols(Req, HandlerOpts, Context) ->
 -spec allow_connection(cowboy_req:req(), cowboy_websocket:opts(), bh_context:context()) ->
           init_fun_reply().
 allow_connection(Req, HandlerOpts, Context) ->
-    {RemoteIP, _Port} = cowboy_req:peer(Req),
+    RemoteIP = get_remote_peer(Req),
+
     MaxConnectionsPerIP = kapps_config:get_integer(?CONFIG_CAT, <<"max_connections_per_ip">>),
     case maybe_allow_connection(RemoteIP
                                ,MaxConnectionsPerIP
@@ -68,11 +69,23 @@ allow_connection(Req, HandlerOpts, Context) ->
                                )
     of
         'true' ->
-            IPBin = kz_network_utils:iptuple_to_binary(RemoteIP),
-            bh_context:set_source(Context, IPBin);
+            bh_context:set_source(Context, RemoteIP);
         'false' ->
             {'ok', cowboy_req:reply(429, Req), HandlerOpts}
     end.
+
+-spec get_remote_peer(cowboy_req:req()) -> kz_term:ne_binary().
+get_remote_peer(Req) ->
+    get_remote_peer(cowboy_req:peer(Req), cowboy_req:header(<<"x-forwarded-for">>, Req)).
+
+-spec get_remote_peer({inet:ip_address(), inet:port_number()}, kz_term:api_ne_binary()) ->
+          kz_term:ne_binary().
+get_remote_peer({Peer, _PeerPort}, 'undefined') ->
+    lager:info("new connection from peer ~p", [Peer]),
+    kz_network_utils:iptuple_to_binary(Peer);
+get_remote_peer({_ProxyIP, _ProxyPort}, ForwardIP) ->
+    lager:info("new connection from peer ~s (proxy ~p)", [ForwardIP, _ProxyIP]),
+    ForwardIP.
 
 maybe_allow_connection(_RemoteIP, 'undefined', _ActiveConns) ->
     %% no max connection limit set
@@ -108,9 +121,9 @@ authenticate(Req, HandlerOpts, Context) ->
 
 -spec maybe_start_keep_alive() -> ok | reference().
 maybe_start_keep_alive() ->
-    case kz_app_config:get_boolean(?APP, <<"keep_client_alive">>, false) of
-        true -> erlang:send_after(1 * ?MILLISECONDS_IN_MINUTE, self(), 'keep_alive');
-        false -> ok
+    case kz_app_config:get_boolean(?APP, <<"keep_client_alive">>, 'false') of
+        'true' -> erlang:send_after(1 * ?MILLISECONDS_IN_MINUTE, self(), 'keep_alive');
+        'false' -> 'ok'
     end.
 
 -spec terminate(any(), cowboy_req:req(), bh_context:context() | cowboy_websocket:opts())  -> 'ok'.

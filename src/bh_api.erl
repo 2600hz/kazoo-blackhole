@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2021, 2600Hz
+%%% @copyright (C) 2012-2022, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -70,7 +70,7 @@ api_headers(Context) ->
     ,{<<"x-request-id">>, RequestId}
     ].
 
-handle_api_reply({ok, _Code, _Headers, Body}) ->
+handle_api_reply({'ok', _Code, _Headers, Body}) ->
     kz_json:decode(Body).
 
 api_data_payload(JObj) ->

@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2021, 2600Hz
+%%% @copyright (C) 2012-2022, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -32,7 +32,7 @@ init() ->
 
 bindings(Payload) ->
     Bindings = case kz_json:get_ne_binary_value([<<"data">>, <<"binding">>], Payload) of
-                   undefined -> [];
+                   'undefined' -> [];
                    Binding -> [Binding]
                end,
     kz_json:get_list_value([<<"data">>, <<"bindings">>], Payload, Bindings).
@@ -51,8 +51,8 @@ authorize(Context, _AccountId, []) -> Context;
 authorize(Context, AccountId, [Binding | Bindings]) ->
     Ctx = authorize_binding(Binding, AccountId, Context),
     case bh_context:success(Ctx) of
-        true -> authorize(Ctx, AccountId, Bindings);
-        false -> Ctx
+        'true' -> authorize(Ctx, AccountId, Bindings);
+        'false' -> Ctx
     end.
 
 authorize_binding(Binding, AccountId, Context) ->
@@ -77,8 +77,8 @@ validate_subscription(Context, _AccountId, []) -> Context;
 validate_subscription(Context, AccountId, [Binding | Bindings]) ->
     Ctx = validate_binding(Context, AccountId, Binding),
     case bh_context:success(Ctx) of
-        true -> validate_subscription(Ctx, AccountId, Bindings);
-        false -> Ctx
+        'true' -> validate_subscription(Ctx, AccountId, Bindings);
+        'false' -> Ctx
     end.
 
 validate_binding(Context, AccountId, Binding) ->
@@ -184,7 +184,7 @@ add_event_bindings_fold(#{requested := ClientBinding
                          } = Bindings
                        ,{Context, Subs}
                        ) ->
-    Module = maps:get(module, Bindings, ?MODULE),
+    Module = maps:get('module', Bindings, ?MODULE),
     SessionBindings = bh_context:bindings(Context),
     Subscribe = [{ClientBinding, AMQPBindings}] -- SessionBindings,
     NewListeners = Listeners -- bh_context:listeners(Context),
