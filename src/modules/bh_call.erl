@@ -20,11 +20,18 @@
 
 -include("blackhole.hrl").
 
--define(LISTEN_TO, [<<"CHANNEL_CREATE">>, <<"CHANNEL_ANSWER">>, <<"CHANNEL_DESTROY">>
-                   ,<<"CHANNEL_HOLD">>, <<"CHANNEL_UNHOLD">>
-                   ,<<"CHANNEL_BRIDGE">>
-                   ,<<"PARK_PARKED">>, <<"PARK_RETRIEVED">>, <<"PARK_ABANDONED">>
-                   ]).
+-define(LISTEN_TO, kapps_config:get_ne_binaries(?CONFIG_CAT
+                                               ,<<"channel_events">>
+                                               ,[<<"CHANNEL_CREATE">>
+                                                ,<<"CHANNEL_ANSWER">>
+                                                ,<<"CHANNEL_DESTROY">>
+                                                ,<<"CHANNEL_HOLD">>
+                                                ,<<"CHANNEL_UNHOLD">>
+                                                ,<<"CHANNEL_BRIDGE">>
+                                                ,<<"PARK_PARKED">>
+                                                ,<<"PARK_RETRIEVED">>
+                                                ,<<"PARK_ABANDONED">>
+                                                ])).
 
 -define(ACCOUNT_BINDING(AccountId, Event, CallId)
        ,<<"call.", AccountId/binary, ".", Event/binary, ".", CallId/binary>>
@@ -39,8 +46,8 @@ init() ->
 
 -spec init_bindings() -> 'ok'.
 init_bindings() ->
-    Bindings = [?BINDING(Event, <<"{CALL_ID}">>) || Event <- ?LISTEN_TO],
-    case kapps_config:set_default(?CONFIG_CAT, [<<"bindings">>, <<"call">>], Bindings) of
+    DefaultBindings = [?BINDING(Event, <<"{CALL_ID}">>) || Event <- ?LISTEN_TO],
+    case kapps_config:set_default(?CONFIG_CAT, [<<"bindings">>, <<"call">>], DefaultBindings) of
         {'ok', _} -> lager:debug("initialized call bindings");
         {'error', _E} -> lager:info("failed to initialize call bindings: ~p", [_E])
     end.
