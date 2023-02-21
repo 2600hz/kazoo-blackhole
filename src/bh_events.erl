@@ -18,8 +18,6 @@
         ,authorize/2
         ]).
 
--include("blackhole.hrl").
-
 -spec init() -> 'ok'.
 init() ->
     _ = blackhole_bindings:bind(<<"blackhole.authorize.subscribe">>, ?MODULE, 'authorize'),
