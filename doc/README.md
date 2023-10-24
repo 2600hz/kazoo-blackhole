@@ -154,7 +154,7 @@ send({
 
 The Blackhole application listens to events from AMQP.
 It will send an event to you through Websockets if there is an active binding that matches this event.
-To learn more about how they are routed from your Kazoo cluster to this app, see [`kz_hook`](https://github.com/2600hz/kazoo/tree/master/core/kazoo_apps/src) for more info.
+To learn more about how they are routed from your Kazoo cluster to this app, see [`kazoo_hooks`](../../../core/kazoo_hooks) for more info.
 
 Events are plain AMQP event messages.
 Here are a few complete `call.*.*` JSON events:
