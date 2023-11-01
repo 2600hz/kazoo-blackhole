@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2021, 2600Hz
+%%% @copyright (C) 2012-2023, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -94,7 +94,7 @@ bindings(_Context, #{account_id := AccountId
 %%------------------------------------------------------------------------------
 -spec event_binding_options(kz_term:ne_binary(), kz_term:ne_binary(), kz_term:ne_binary()) -> kz_term:proplist().
 event_binding_options(AccountId, Event, Id) ->
-    [{'exchange', [{name, <<"live">>}, {type, <<"topic">>}]}
+    [{'exchange', [{'name', <<"live">>}, {'type', <<"topic">>}]}
     ,{'routing', kz_binary:join(["live", ?CATEGORY, AccountId, Event, Id], <<".">>)}
     ,'federate'
     ].

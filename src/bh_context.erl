@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2021, 2600Hz
+%%% @copyright (C) 2012-2023, 2600Hz
 %%% @doc Helpers for manipulating the #bh_context{} record
 %%% @author Ben Wann
 %%%
@@ -69,7 +69,7 @@
                     ,name :: kz_term:api_binary() | '_'
                     ,metadata :: any() | '_'
                     ,destination = kz_nodes:node_hostname() :: kz_term:ne_binary() | '_'
-                    ,source :: kz_term:api_binary() | '_'
+                    ,source :: kz_term:api_ne_binary() | '_'
                     ,errors = [] :: kz_term:ne_binaries() | '_'
                     ,result = 'ok' :: 'ok' | 'error' | 'shutdown' | '_'
                     ,listeners = [] :: list() | '_'
@@ -318,12 +318,12 @@ set_metadata(#bh_context{}=Context, Meta) ->
 %% @doc
 %% @end
 %%------------------------------------------------------------------------------
--spec source(context()) -> kz_term:ne_binary().
+-spec source(context()) -> kz_term:api_ne_binary().
 source(#bh_context{source=Source}) ->
     Source.
 
 -spec set_source(context(), kz_term:ne_binary()) -> context().
-set_source(#bh_context{}=Context, Source) ->
+set_source(#bh_context{}=Context, <<Source/binary>>) ->
     Context#bh_context{source=Source}.
 
 %%------------------------------------------------------------------------------

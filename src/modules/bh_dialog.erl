@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2021, 2600Hz
+%%% @copyright (C) 2012-2023, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -81,7 +81,7 @@ authorize_push(Context, _Payload) -> Context.
 -spec validate_push(bh_context:context(), kz_json:object()) -> bh_context:context().
 validate_push(Context, Payload) ->
     case push_data_payload(Payload) of
-        undefined -> bh_context:add_error(Context, <<"missing required data object">>);
+        'undefined' -> bh_context:add_error(Context, <<"missing required data object">>);
         _Data -> Context
     end.
 
@@ -89,8 +89,8 @@ validate_push(Context, Payload) ->
 push(Context, Payload) ->
     JObj = kz_json:set_values(kz_api:default_headers(?APP_NAME, ?APP_VERSION), push_data_payload(Payload)),
     case publish_push(JObj) of
-        ok -> bh_context:set_resp_status(Context, <<"success">>);
-        {error, Error} -> bh_context:add_error(Context, Error)
+        'ok' -> bh_context:set_resp_status(Context, <<"success">>);
+        {'error', Error} -> bh_context:add_error(Context, Error)
     end.
 
 %%%=============================================================================
@@ -103,7 +103,7 @@ push(Context, Payload) ->
 %%------------------------------------------------------------------------------
 -spec event_binding_options(kz_term:ne_binary(), kz_term:ne_binary(), kz_term:ne_binary()) -> kz_term:proplist().
 event_binding_options(AccountId, DialogId, InstanceId) ->
-    [{'exchange', [{name, ?EXCHANGE_DLG}, {type, <<"topic">>}]}
+    [{'exchange', [{'name', ?EXCHANGE_DLG}, {'type', <<"topic">>}]}
     ,{'routing', kz_binary:join([<<"dialog">>, <<"event">>, AccountId, DialogId, InstanceId], <<".">>)}
     ,'federate'
     ].
@@ -111,13 +111,13 @@ event_binding_options(AccountId, DialogId, InstanceId) ->
 push_data_payload(JObj) ->
     kz_json:get_json_value(<<"data">>, JObj).
 
--spec publish_push(kz_json:object()) -> 'ok' | {error, any()}.
+-spec publish_push(kz_json:object()) -> 'ok' | {'error', any()}.
 publish_push(API) ->
     publish_push(kz_api:server_id(API), API).
 
--spec publish_push(kz_term:api_ne_binary(), kz_json:object()) -> 'ok' | {error, any()}.
-publish_push(undefined, _API) ->
-    {error, <<"no server_id to publish dialog">>};
+-spec publish_push(kz_term:api_ne_binary(), kz_json:object()) -> 'ok' | {'error', any()}.
+publish_push('undefined', _API) ->
+    {'error', <<"no server_id to publish dialog">>};
 publish_push(ServerId, API) ->
     {'ok', Payload} = kz_api:prepare_api_payload(kz_json:set_values(?PUSH_REQ_VALUES, API), [], fun build/1),
     kz_amqp_util:targeted_publish(ServerId, Payload).
