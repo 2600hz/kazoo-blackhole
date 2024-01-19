@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2023, 2600Hz
+%%% @copyright (C) 2012-2024, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,16 +22,16 @@
 -elvis([{elvis_style, no_debug_call, disable}]).
 
 %%------------------------------------------------------------------------------
-%% @doc
+%% @doc Publish a request to start a module.
 %% @end
 %%------------------------------------------------------------------------------
+-spec start_module(module() | kz_term:ne_binary()) -> 'ok'.
+start_module(Module) ->
+    start_module(Module, 'true').
 
--spec start_module(kz_term:text()) -> 'ok'.
-start_module(ModuleBin) ->
-    start_module(ModuleBin, 'true').
-
--spec start_module(kz_term:text(), kz_term:text() | boolean()) -> 'ok'.
-start_module(ModuleBin, Persist) ->
+-spec start_module(module() | kz_term:ne_binary(), kz_term:text() | boolean()) -> 'ok'.
+start_module(Module, Persist) ->
+    ModuleBin = kz_term:to_binary(Module),
     Req = [{<<"Module">>, ModuleBin}
           ,{<<"Action">>, <<"start">>}
           ,{<<"Persist">>, kz_term:to_boolean(Persist)}
@@ -53,16 +53,16 @@ start_module(ModuleBin, Persist) ->
     end.
 
 %%------------------------------------------------------------------------------
-%% @doc
+%% @doc Publish a request to stop a module.
 %% @end
 %%------------------------------------------------------------------------------
+-spec stop_module(atom() | kz_term:ne_binary()) -> 'ok'.
+stop_module(Module) ->
+    stop_module(Module, 'true').
 
--spec stop_module(kz_term:text()) -> 'ok'.
-stop_module(ModuleBin) ->
-    stop_module(ModuleBin, 'true').
-
--spec stop_module(kz_term:text(), kz_term:text() | boolean()) -> 'ok'.
-stop_module(ModuleBin, Persist) ->
+-spec stop_module(atom() | kz_term:ne_binary(), kz_term:text() | boolean()) -> 'ok'.
+stop_module(Module, Persist) ->
+    ModuleBin = kz_term:to_binary(Module),
     Req = [{<<"Module">>, ModuleBin}
           ,{<<"Action">>, <<"stop">>}
           ,{<<"Persist">>, kz_term:to_boolean(Persist)}
