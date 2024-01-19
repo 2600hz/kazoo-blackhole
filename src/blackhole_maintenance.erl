@@ -56,11 +56,11 @@ start_module(Module, Persist) ->
 %% @doc Publish a request to stop a module.
 %% @end
 %%------------------------------------------------------------------------------
--spec stop_module(atom() | kz_term:ne_binary()) -> 'ok'.
+-spec stop_module(module() | kz_term:ne_binary()) -> 'ok'.
 stop_module(Module) ->
     stop_module(Module, 'true').
 
--spec stop_module(atom() | kz_term:ne_binary(), kz_term:text() | boolean()) -> 'ok'.
+-spec stop_module(module() | kz_term:ne_binary(), kz_term:text() | boolean()) -> 'ok'.
 stop_module(Module, Persist) ->
     ModuleBin = kz_term:to_binary(Module),
     Req = [{<<"Module">>, ModuleBin}
