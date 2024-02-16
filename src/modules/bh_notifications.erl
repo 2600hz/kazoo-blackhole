@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2023, 2600Hz
+%%% @copyright (C) 2024, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,9 +23,6 @@
                                     )
        ).
 
--define(BINDING(Category, Event)
-       ,<<"notifications.", (Category)/binary, ".", Event/binary>>
-       ).
 
 -spec init() -> any().
 init() ->
@@ -35,7 +32,7 @@ init() ->
 
 -spec init_bindings() -> 'ok'.
 init_bindings() ->
-    DefaultBindings = [?BINDING(get_category(Event), Event) || Event <- ?LISTEN_TO],
+    DefaultBindings = [kapi_definition:binding(kapi_notifications:api_definition(Evt)) || Evt <- ?LISTEN_TO],
     case kapps_config:set_default(?CONFIG_CAT, [<<"bindings">>, <<"notifications">>], DefaultBindings) of
         {'ok', _} -> lager:debug("initialized notifications bindings");
         {'error', _E} -> lager:info("failed to initialize notifications bindings: ~p", [_E])
@@ -53,11 +50,11 @@ validate(Context, #{keys := [Category, Event]}) ->
 -spec bindings(bh_context:context(), map()) -> map().
 bindings(_Context
         ,#{account_id := _AccountId
-          ,keys := [Category, Event]
+          ,keys := [_Category, Event]
           }=Map
         ) ->
-    Requested = ?BINDING(Category, Event),
-    Subscribed = [?BINDING(get_category(Evt), Evt) || Evt <- ?LISTEN_TO],
+    Requested = kapi_definition:binding(kapi_notifications:api_definition(Event)),
+    Subscribed = [kapi_definition:binding(kapi_notifications:api_definition(Evt)) || Evt <- ?LISTEN_TO],
     Listeners = [{'amqp', 'notifications', notifications_bind_options()}],
     Map#{requested => Requested
         ,subscribed => Subscribed
@@ -72,4 +69,4 @@ get_category(Event) ->
 
 -spec notifications_bind_options() -> [atom() | {atom(), [atom()]}].
 notifications_bind_options() ->
-    [{'restrict_to', [kz_term:to_atom(Event) || Event <- ?LISTEN_TO]}].
+    [{'restrict_to', [kapi_definition:restrict_to(kapi_notifications:api_definition(Event)) || Event <- ?LISTEN_TO]}].
