@@ -54,8 +54,8 @@ bindings(_Context
           }=Map
         ) ->
     Requested = kapi_definition:binding(kapi_notifications:api_definition(Event)),
-    Subscribed = [kapi_definition:binding(kapi_notifications:api_definition(Evt)) || Evt <- ?LISTEN_TO],
-    Listeners = [{'amqp', 'notifications', notifications_bind_options()}],
+    Subscribed = [kapi_definition:binding(kapi_notifications:api_definition(Event))],
+    Listeners = [{'amqp', 'notifications', notifications_bind_options(Event)}],
     Map#{requested => Requested
         ,subscribed => Subscribed
         ,listeners => Listeners
@@ -67,6 +67,6 @@ bindings(_Context
 get_category(Event) ->
     kapi_definition:category(kapi_notifications:api_definition(Event)).
 
--spec notifications_bind_options() -> [atom() | {atom(), [atom()]}].
-notifications_bind_options() ->
-    [{'restrict_to', [kapi_definition:restrict_to(kapi_notifications:api_definition(Event)) || Event <- ?LISTEN_TO]}].
+-spec notifications_bind_options(kz_term:ne_binary()) -> [{atom(), [atom()]}].
+notifications_bind_options(Event) ->
+    [{'restrict_to', [kapi_definition:restrict_to(kapi_notifications:api_definition(Event))]}].
