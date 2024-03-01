@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2023, 2600Hz
+%%% @copyright (C) 2012-2024, 2600Hz
 %%% @doc
 %%% @author Peter Defebvre
 %%% @author Roman Galeev
@@ -25,8 +25,7 @@
        ,kapps_config:get_ne_binaries(?CONFIG_CAT, <<"allowed_doc_types">>, ?DOC_TYPES)
        ).
 -define(ALL_DOC_MODB_TYPES
-       ,kapps_config:get_ne_binaries(?CONFIG_CAT, <<"extra_doc_modb_types">>, [])
-            ++ ?DOC_MODB_TYPES
+       ,kapps_config:get_ne_binaries(?CONFIG_CAT, <<"extra_doc_modb_types">>, []) ++ ?DOC_MODB_TYPES
        ).
 
 -define(OBJECT(Action, Type)
