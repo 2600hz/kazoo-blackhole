@@ -21,6 +21,14 @@
 -include_lib("kazoo_amqp/include/kapi_conf.hrl").
 -include_lib("kazoo_documents/include/doc_types.hrl").
 
+-define(ALLOWED_DOC_TYPES
+       ,kapps_config:get_ne_binaries(?CONFIG_CAT, <<"allowed_doc_types">>, ?DOC_TYPES)
+       ).
+-define(ALL_DOC_MODB_TYPES
+       ,kapps_config:get_ne_binaries(?CONFIG_CAT, <<"extra_doc_modb_types">>, [])
+            ++ ?DOC_MODB_TYPES
+       ).
+
 -define(OBJECT(Action, Type)
        ,<<"object.", Action/binary, ".", Type/binary>>
        ).
@@ -32,11 +40,11 @@ init() ->
     blackhole_bindings:bind(<<"blackhole.events.bindings.object">>, ?MODULE, 'bindings').
 
 init_bindings() ->
-    Bindings = [?OBJECT(Action, Type)
-                || Action <- ?DOC_ACTIONS,
-                   Type <- ?DOC_TYPES
-               ],
-    case kapps_config:set_default(?CONFIG_CAT, [<<"bindings">>, <<"object">>], Bindings) of
+    DefaultBindings = [?OBJECT(Action, Type)
+                       || Action <- ?DOC_ACTIONS,
+                          Type <- ?ALLOWED_DOC_TYPES
+                      ],
+    case kapps_config:set_default(?CONFIG_CAT, [<<"bindings">>, <<"object">>], DefaultBindings) of
         {'ok', _} -> lager:debug("initialized object bindings");
         {'error', _E} -> lager:info("failed to initialize object bindings: ~p", [_E])
     end.
@@ -52,14 +60,14 @@ validate(Context, #{keys := [Action, <<"*">>]}) ->
         'false' -> bh_context:add_error(Context, <<"event ", Action/binary, ".* not supported">>)
     end;
 validate(Context, #{keys := [<<"*">>, Type]}) ->
-    case lists:member(Type, ?DOC_TYPES) of
+    case lists:member(Type, ?ALLOWED_DOC_TYPES) of
         'true' -> Context;
         'false' -> bh_context:add_error(Context, <<"event *.", Type/binary, " not supported">>)
     end;
 validate(Context, #{keys := [Action, Type]
                    }) ->
     case lists:member(Action, ?DOC_ACTIONS)
-        andalso lists:member(Type, ?DOC_TYPES)
+        andalso lists:member(Type, ?ALLOWED_DOC_TYPES)
     of
         'true' -> Context;
         'false' -> bh_context:add_error(Context, <<"event ", Action/binary, ".", Type/binary, " not supported">>)
@@ -84,7 +92,7 @@ subscribed(<<"*">>, Action, AccountDb, AccountMODB) ->
     ,<<Action/binary, ".", AccountMODB/binary, ".*.*">>
     ];
 subscribed(Type, Action, AccountDb, AccountMODB) ->
-    case lists:member(Type, ?DOC_MODB_TYPES) of
+    case lists:member(Type, ?ALL_DOC_MODB_TYPES) of
         'true'  -> [<<Action/binary, ".", AccountMODB/binary, ".", Type/binary, ".*">>];
         'false' -> [<<Action/binary, ".", AccountDb/binary, ".", Type/binary, ".*">>]
     end.
@@ -94,7 +102,7 @@ listeners(<<"*">>, Action, AccountDb, AccountMODB) ->
     ,{'amqp', 'conf', bind_options(Action, <<"*">>, AccountMODB)}
     ];
 listeners(Type, Action, AccountDb, AccountMODB) ->
-    case lists:member(Type, ?DOC_MODB_TYPES) of
+    case lists:member(Type, ?ALL_DOC_MODB_TYPES) of
         'true'  -> [{'amqp', 'conf', bind_options(Action, Type, AccountMODB)}];
         'false' -> [{'amqp', 'conf', bind_options(Action, Type, AccountDb)}]
     end.
