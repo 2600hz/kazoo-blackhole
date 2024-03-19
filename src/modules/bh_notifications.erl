@@ -69,4 +69,6 @@ get_category(Event) ->
 
 -spec notifications_bind_options(kz_term:ne_binary()) -> [{atom(), [atom()]}].
 notifications_bind_options(Event) ->
-    [{'restrict_to', [kapi_definition:restrict_to(kapi_notifications:api_definition(Event))]}].
+    [{'restrict_to', [kapi_definition:restrict_to(kapi_notifications:api_definition(Event))]}
+    ,'federate'
+    ].
