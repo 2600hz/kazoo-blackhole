@@ -1,7 +1,22 @@
-  - 'Blackhole: Websocket interface to KAZOO events':
-    - 'applications/blackhole/doc/README.md'
-    - 'applications/blackhole/doc/bindings.md'
-    - 'applications/blackhole/doc/haproxy.md'
-    - 'applications/blackhole/doc/maintenance.md'
-    - 'applications/blackhole/doc/ping.md'
-    - 'applications/blackhole/doc/troubleshooting.md'
+  - 'Blackhole: KAZOO WebSocket API':
+    - 'Blackhole - WebSocket Server': 'applications/blackhole/doc/README.md'
+    - 'Blackhole WebSocket API':
+      - 'How to use Blackhole API': 'applications/blackhole/doc/api/README.md'
+      - 'API':
+        - 'Crossbar API tunneling': 'applications/blackhole/doc/api/actions/bh_api.md'
+        - 'KAZOO Events': 'applications/blackhole/doc/api/actions/bh_events.md'
+        - 'Ping': 'applications/blackhole/doc/api/actions/bh_ping.md'
+        - 'Publish WebSocket Application Events': 'applications/blackhole/doc/api/actions/bh_publish_app_event.md'
+      - 'Events':
+        - 'WebSocket Applications Events': 'applications/blackhole/doc/api/events/bh_app_event.md'
+        - 'Call Events': 'applications/blackhole/doc/api/events/bh_call.md'
+        - 'Conference Events': 'applications/blackhole/doc/api/events/bh_conference.md'
+        - 'Fax': 'applications/blackhole/doc/api/events/bh_fax.md'
+        - 'Live Conference': 'applications/blackhole/doc/api/events/bh_live.md'
+        - 'Document Objects': 'applications/blackhole/doc/api/events/bh_object.md'
+        - 'Presence': 'applications/blackhole/doc/api/events/bh_presence.md'
+    - 'Administrating Blackhole':
+      - 'Administrating Blackhole': 'applications/blackhole/doc/blackhole_sys_admin.md'
+      - 'HAProxy': 'applications/blackhole/doc/haproxy.md'
+    - 'Blackhole Maintenance Commands': 'applications/blackhole/doc/maintenance.md'
+    - 'Troubleshooting': 'applications/blackhole/doc/troubleshooting.md'

@@ -3,7 +3,15 @@
 This module receives a ping, and responds with a pong. It takes no arguments.
 This can be used to test a socket is up, or keep it alive by preventing it from becoming idle.
 
+## Request Payload
+
+Key | Description | Type | Default | Required
+--- | ----------- | ---- | ------- | --------
+`action` | to ping | `string('ping')` |  | `true`
+
 ## Example JavaScript
+
+Here is a very simple code to keep WebSocket connection up by sending ping, if it is not receiving a response then it will try to reconnect to WebSocket.
 
 ```javascript
 // Put your Blackhole URL here

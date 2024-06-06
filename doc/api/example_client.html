@@ -1,0 +1,51 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <script>
+        var socket = new WebSocket("ws://{BLACKHOLE_IP_ADDRESS}:5555");
+
+        function send(data) {
+            socket.send(JSON.stringify(data));
+        }
+
+        socket.onopen = function() {
+            send({
+                action: 'subscribe',
+                auth_token: '{AUTH_TOKEN}',
+                request_id: '{REQUEST_ID}',
+                data: {
+                    account_id: '{ACCOUNT_ID}',
+                    binding: 'call.CHANNEL_CREATE.*'
+                }
+            });
+
+            send({
+                action: 'subscribe',
+                auth_token: '{AUTH_TOKEN}',
+                request_id: '{REQUEST_ID}',
+                data: {
+                    account_id: '{ACCOUNT_ID}',
+                    binding: 'conference.event.{CONFERENCE_ID}.*'
+                }
+            });
+
+            send({
+                action: 'subscribe',
+                auth_token: '{AUTH_TOKEN}',
+                request_id: '{REQUEST_ID}',
+                data: {
+                    account_id: '{ACCOUNT_ID}',
+                    binding: 'doc_created.*.user.*'
+                }
+            });
+        }
+
+        socket.onmessage = function(raw_message) {
+            var json_data = JSON.parse(raw_message.data);
+
+            console.log(json_data);
+        };
+    </script>
+  </body>
+</html>
