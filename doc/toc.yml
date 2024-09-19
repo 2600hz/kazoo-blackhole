@@ -6,7 +6,7 @@
         - 'Crossbar API tunneling': 'doc/api/actions/bh_api.md'
         - 'KAZOO Events': 'doc/api/actions/bh_events.md'
         - 'Ping': 'doc/api/actions/bh_ping.md'
-        - 'Publish WebSocket Application Events': 'doc/api/actions/bh_publish_app_event.md'
+        # - 'Publish WebSocket Application Events': 'doc/api/actions/bh_publish_app_event.md'
       - 'Events':
         - 'WebSocket Applications Events': 'doc/api/events/bh_app_event.md'
         - 'Call Events': 'doc/api/events/bh_call.md'
