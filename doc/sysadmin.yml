@@ -1,0 +1,4 @@
+- 'Administrating Blackhole':
+  - 'Administrating Blackhole': 'doc/blackhole_sys_admin.md'
+  - 'HAProxy': 'doc/haproxy.md'
+  - 'Blackhole Maintenance Commands': 'doc/maintenance.md'
