@@ -15,8 +15,8 @@
         - 'Live Conference': 'doc/api/events/bh_live.md'
         - 'Document Objects': 'doc/api/events/bh_object.md'
         - 'Presence': 'doc/api/events/bh_presence.md'
-    - 'Administrating Blackhole':
-      - 'Administrating Blackhole': 'doc/blackhole_sys_admin.md'
-      - 'HAProxy': 'doc/haproxy.md'
+    # - 'Administrating Blackhole':
+    #   - 'Administrating Blackhole': 'doc/blackhole_sys_admin.md'
+    #   - 'HAProxy': 'doc/haproxy.md'
     # - 'Blackhole Maintenance Commands': 'doc/maintenance.md'
     - 'Troubleshooting': 'doc/troubleshooting.md'
