@@ -1,4 +1,4 @@
-  - 'Blackhole: KAZOO WebSocket API':
+  # - 'Blackhole: KAZOO WebSocket API':
     - 'Blackhole - WebSocket Server': 'doc/README.md'
     - 'Blackhole WebSocket API':
       - 'How to use Blackhole API': 'doc/api/README.md'
