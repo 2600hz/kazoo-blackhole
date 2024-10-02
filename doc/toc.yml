@@ -2,7 +2,7 @@
     - 'Blackhole - WebSocket Server': 'doc/README.md'
     - 'Blackhole WebSocket API':
       - 'How to use Blackhole API': 'doc/api/README.md'
-      - 'API':
+      # - 'API':
         - 'Crossbar API tunneling': 'doc/api/actions/bh_api.md'
         - 'KAZOO Events': 'doc/api/actions/bh_events.md'
         - 'Ping': 'doc/api/actions/bh_ping.md'
