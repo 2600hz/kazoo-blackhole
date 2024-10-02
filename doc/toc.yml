@@ -1,22 +1,22 @@
   # - 'Blackhole: KAZOO WebSocket API':
-    - 'Blackhole - WebSocket Server': 'doc/README.md'
-    - 'Blackhole WebSocket API':
-      - 'How to use Blackhole API': 'doc/api/README.md'
-      # - 'API':
-        - 'Crossbar API tunneling': 'doc/api/actions/bh_api.md'
-        - 'KAZOO Events': 'doc/api/actions/bh_events.md'
-        - 'Ping': 'doc/api/actions/bh_ping.md'
-        # - 'Publish WebSocket Application Events': 'doc/api/actions/bh_publish_app_event.md'
-      - 'Events':
-        # - 'WebSocket Applications Events': 'doc/api/events/bh_app_event.md'
-        - 'Call Events': 'doc/api/events/bh_call.md'
-        - 'Conference Events': 'doc/api/events/bh_conference.md'
-        - 'Fax': 'doc/api/events/bh_fax.md'
-        - 'Live Conference': 'doc/api/events/bh_live.md'
-        - 'Document Objects': 'doc/api/events/bh_object.md'
-        - 'Presence': 'doc/api/events/bh_presence.md'
-    # - 'Administrating Blackhole':
-    #   - 'Administrating Blackhole': 'doc/blackhole_sys_admin.md'
-    #   - 'HAProxy': 'doc/haproxy.md'
-    # - 'Blackhole Maintenance Commands': 'doc/maintenance.md'
-    - 'Troubleshooting': 'doc/troubleshooting.md'
+- 'Blackhole - WebSocket Server': 'doc/README.md'
+- 'Blackhole WebSocket API':
+  - 'How to use Blackhole API': 'doc/api/README.md'
+  - 'API':
+    - 'Crossbar API tunneling': 'doc/api/actions/bh_api.md'
+    - 'KAZOO Events': 'doc/api/actions/bh_events.md'
+    - 'Ping': 'doc/api/actions/bh_ping.md'
+    # - 'Publish WebSocket Application Events': 'doc/api/actions/bh_publish_app_event.md'
+  - 'Events':
+    # - 'WebSocket Applications Events': 'doc/api/events/bh_app_event.md'
+    - 'Call Events': 'doc/api/events/bh_call.md'
+    - 'Conference Events': 'doc/api/events/bh_conference.md'
+    - 'Fax': 'doc/api/events/bh_fax.md'
+    - 'Live Conference': 'doc/api/events/bh_live.md'
+    - 'Document Objects': 'doc/api/events/bh_object.md'
+    - 'Presence': 'doc/api/events/bh_presence.md'
+# - 'Administrating Blackhole':
+#   - 'Administrating Blackhole': 'doc/blackhole_sys_admin.md'
+#   - 'HAProxy': 'doc/haproxy.md'
+# - 'Blackhole Maintenance Commands': 'doc/maintenance.md'
+- 'Troubleshooting': 'doc/troubleshooting.md'
