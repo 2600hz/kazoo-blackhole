@@ -1,6 +1,6 @@
-# Subscribe to KAZOO events
+# Subscribe to {% BRAND_NAME %} events
 
-This API provide a way to subscribe to KAZOO event using binding and receive them on websoxckert message in real time. Effectively this API provides an AMQP->Websocket bridge, providing you with real-time event streams about calls, API changes, and more.
+This API provide a way to subscribe to {% BRAND_NAME %} event using binding and receive them on websoxckert message in real time. Effectively this API provides an AMQP->Websocket bridge, providing you with real-time event streams about calls, API changes, and more.
 
 ## Authorization
 
@@ -72,7 +72,7 @@ Events are plain AMQP event messages.
 
 ## Binding string syntax
 
-The binding syntax is the same used throughout all KAZOO, since it is the same as AMQP's binding syntax.
+The binding syntax is the same used throughout all {% BRAND_NAME %}, since it is the same as AMQP's binding syntax.
 
 Each binding is consist of multiple slots (or segments) separated by dot `.`, like `call.CHANNEL_CREATE.*`. Each slot is matches one slot in the event's routing key.
 

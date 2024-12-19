@@ -2,7 +2,7 @@
 
 ## Starting the app
 
-Start the Blackhole application on KAZOO (if it is not running already), the command below will add Blackhole to the list of startup application too:
+Start the Blackhole application on {% BRAND_NAME %} (if it is not running already), the command below will add Blackhole to the list of startup application too:
 
 ```bash
 sup kazoo_apps_maintenance start_app blackhole

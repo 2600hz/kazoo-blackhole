@@ -18,7 +18,7 @@ Replace `{CALL_ID}` with the actual Call-ID of a call (if known), or use `*` to 
 
 ## Some examples for AMQP event payload
 
-Events are plain AMQP event messages. Here are a few complete `call.*.*` JSON events (please keep in mind these are just for reference, consult the rest of KAZOO documentation to see current values):
+Events are plain AMQP event messages. Here are a few complete `call.*.*` JSON events (please keep in mind these are just for reference, consult the rest of {% BRAND_NAME %} documentation to see current values):
 
 ```json
 {

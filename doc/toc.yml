@@ -4,7 +4,7 @@
   - 'How to use Blackhole API': 'doc/api/README.md'
   - 'API':
     - 'Crossbar API tunneling': 'doc/api/actions/bh_api.md'
-    - 'KAZOO Events': 'doc/api/actions/bh_events.md'
+    - '{% BRAND_NAME %} Events': 'doc/api/actions/bh_events.md'
     - 'Ping': 'doc/api/actions/bh_ping.md'
     # - 'Publish WebSocket Application Events': 'doc/api/actions/bh_publish_app_event.md'
   - 'Events':

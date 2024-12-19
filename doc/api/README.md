@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-1. To interact with Blackhole API, you need to authenticate with KAZOO first. You can use Crossbar HTTP API to perform authentication (over HTTP protocol) and use the resulting Auth Token when sending the request to WebSocket. See Crossbar's [How to authenticate](../../crossbar/doc/how_to_authenticate.md) to learn more authentication methods.
+1. To interact with Blackhole API, you need to authenticate with {% BRAND_NAME %} first. You can use Crossbar HTTP API to perform authentication (over HTTP protocol) and use the resulting Auth Token when sending the request to WebSocket. See Crossbar's [How to authenticate](../../crossbar/doc/how_to_authenticate.md) to learn more authentication methods.
 1. Make a connection to Blackhole using WebSocket API
 1. Tell WebSocket API what to do when it receives a message (reply) from Blackhole (take action on certain messages or show them in UI)
 1. Once the connection is established, the client and server can send WebSocket data or text frames back and forth in full-duplex mode.
@@ -96,5 +96,5 @@ This is a common reply to a request.
 * [`api`](./actions/bh_api.md): Channel through your Crossbar request, will send the reply to that request later.
 * [`ping`](./actions/bh_ping.md): Sends a reply with data `{"response":"pong"}`. Useful to check if the WebSocket connect is alive.
 * [`publish_app_event`](./actions/bh_publish_app_event.md): Provide a way to publish a message to WebSocket clients that are subscribed and binded to receive this message.
-* [`subscribe`](./actions/bh_events.md): Subscribe and bind to receive specified KAZOO events.
-* [`unsubscribe`](./actions/bh_events.md): Unsubscribe and unbind from specified KAZOO events.
+* [`subscribe`](./actions/bh_events.md): Subscribe and bind to receive specified {% BRAND_NAME %} events.
+* [`unsubscribe`](./actions/bh_events.md): Unsubscribe and unbind from specified {% BRAND_NAME %} events.
