@@ -26,7 +26,6 @@ Please note:
 
 ## List of events
 
-* [`app_event`](../events/bh_app_event.md)
 * [`call`](../events/bh_call.md)
 * [`conference`](../events/bh_conference.md)
 * [`fax`](../events/bh_fax.md)
@@ -35,7 +34,7 @@ Please note:
 * [`presence`](../events/bh_presence.md)
 
 !!! note:
-    You can get a list of available events and their bindings using Crossbar HTTP API [`GET /v2/websockets`](../../../../crossbar/doc/websockets.md#available-websocket-bindings).
+    You can get a list of available events and their bindings using Crossbar HTTP API [`GET /v2/websockets`](https://docs.2600hz.com/git/2600hz/kazoo-crossbar/doc/websockets.md#available-websocket-bindings).
 
 ### Response payload message
 
@@ -85,7 +84,6 @@ Here are some examples:
 
 * `call.CHANNEL_CREATE.123qweasdzxc` will matches call's `CHANNEL_CREATE` event with Call-ID `123qweasdzxc`.
 * `call.CHANNEL_CREATE.*` will matches all call's `CHANNEL_CREATE` events (with any Call-ID)
-* `app_event.mychatapp.room.123.#` will matches all `app_event` for `mychatapp.room.123` event with any possible remaining slots in routing keys (like `app_event.mychatapp.room.123.message.qaz`)
 
 ## Some examples of subscribe or unsubscribe
 

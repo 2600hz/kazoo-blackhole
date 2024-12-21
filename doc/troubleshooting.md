@@ -2,7 +2,7 @@
 
 ## I'm getting replies like "failed to authenticate token"
 
-You need to provide a valid `auth_token` when sending request. Please use [Crossbar API](../../crossbar/doc/how_to_authenticate.md) (through HTTP protocol) to authenticate first an obtain an Auth Token and use that.
+You need to provide a valid `auth_token` when sending request. Please use [Crossbar API](https://docs.2600hz.com/git/2600hz/kazoo-crossbar/doc/how_to_authenticate.md) (through HTTP protocol) to authenticate first an obtain an Auth Token and use that.
 
 ## I sent a websocket message but did not received any reply
 
