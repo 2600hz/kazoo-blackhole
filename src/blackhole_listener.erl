@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2010-2023, 2600Hz
+%%% @copyright (C) 2010-2025, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -188,21 +188,41 @@ send_error_module_resp(EventJObj, Error) ->
 -type bh_event_binding() :: bh_amqp_binding() | bh_hook_binding().
 -type bh_event_bindings() :: [bh_event_binding()].
 
--spec add_binding(bh_event_binding()) -> 'ok'.
+-spec add_binding(bh_event_binding()) -> 'ok' | {'error', any()}.
 add_binding(Binding) ->
-    gen_listener:call(?SERVER, {'add_bh_binding', Binding}).
+    try gen_listener:call(?SERVER, {'add_bh_binding', Binding})
+    catch
+        _E:R ->
+            lager:warning("request failed: ~s: ~p", [_E, R]),
+            {'error', R}
+    end.
 
--spec add_bindings(bh_event_bindings()) -> 'ok'.
+-spec add_bindings(bh_event_bindings()) -> 'ok' | {'error', any()}.
 add_bindings(Bindings) ->
-    gen_listener:call(?SERVER, {'add_bh_bindings', Bindings}).
+    try gen_listener:call(?SERVER, {'add_bh_bindings', Bindings})
+    catch
+        _E:R ->
+            lager:warning("request failed: ~s: ~p", [_E, R]),
+            {'error', R}
+    end.
 
--spec remove_binding(bh_event_binding()) -> 'ok'.
+-spec remove_binding(bh_event_binding()) -> 'ok' | {'error', any()}.
 remove_binding(Binding) ->
-    gen_listener:cast(?SERVER, {'remove_bh_binding', Binding}).
+    try gen_listener:cast(?SERVER, {'remove_bh_binding', Binding})
+    catch
+        _E:R ->
+            lager:warning("request failed: ~s: ~p", [_E, R]),
+            {'error', R}
+    end.
 
--spec remove_bindings(bh_event_bindings()) -> 'ok'.
+-spec remove_bindings(bh_event_bindings()) -> 'ok' | {'error', any()}.
 remove_bindings(Bindings) ->
-    gen_listener:cast(?SERVER, {'remove_bh_bindings', Bindings}).
+    try gen_listener:cast(?SERVER, {'remove_bh_bindings', Bindings})
+    catch
+        _E:R ->
+            lager:warning("request failed: ~s: ~p", [_E, R]),
+            {'error', R}
+    end.
 
 %%%=============================================================================
 %%% gen_server callbacks
@@ -214,6 +234,7 @@ remove_bindings(Bindings) ->
 %%------------------------------------------------------------------------------
 -spec init(list()) -> {'ok', state()}.
 init([]) ->
+    process_flag('priority', 'high'),
     kz_log:put_callid(?MODULE),
     {'ok', #state{bindings=ets:new(?MODULE, [])}}.
 
