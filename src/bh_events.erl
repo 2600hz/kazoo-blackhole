@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2025, 2600Hz
+%%% @copyright (C) 2012-2023, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -188,19 +188,9 @@ add_event_bindings_fold(#{requested := ClientBinding
     NewListeners = Listeners -- bh_context:listeners(Context),
 
     lists:foreach(fun(S) -> bh_bind(Context, Module, S) end, Subscribe),
-    case blackhole_listener:add_bindings(NewListeners) of
-        {'error', _Error} ->
-            handle_error(Context, Subscribe, NewListeners),
-            {bh_context:set_bindings(Context, SessionBindings), Subs};
-        _ ->
-            Ctx = bh_context:add_listeners(Context, NewListeners),
-            {bh_context:set_bindings(Ctx, SessionBindings ++ Subscribe), Subs ++ Subscribe}
-    end.
-
--spec handle_error(bh_context:context(), [{kz_term:ne_binary(), kz_term:ne_binary()}], list()) -> 'ok'.
-handle_error(Context, Subscribe, Listeners) ->
-    lists:foreach(fun(S) -> bh_unbind(Context, S) end, Subscribe),
-    _ = blackhole_listener:remove_bindings(Listeners).
+    blackhole_listener:add_bindings(NewListeners),
+    Ctx = bh_context:add_listeners(Context, NewListeners),
+    {bh_context:set_bindings(Ctx, SessionBindings ++ Subscribe), Subs ++ Subscribe}.
 
 bh_bind(Context, Module, ClientBinding, AMQPBinding) ->
     SessionPid = bh_context:websocket_pid(Context),
@@ -240,7 +230,7 @@ remove_event_bindings_fold(#{requested := ClientBinding
     Removed = [{ClientBinding, AMQPBindings}],
 
     bh_unbind(Context, {ClientBinding, AMQPBindings}),
-    _ = blackhole_listener:remove_bindings(Listeners),
+    blackhole_listener:remove_bindings(Listeners),
     Ctx = bh_context:remove_listeners(Context, Listeners),
 
     {bh_context:set_bindings(Ctx, SessionBindings -- Removed), Subs ++ Removed}.
@@ -262,7 +252,7 @@ bh_unbind(Context, {ClientBinding, AMQPBindings}) ->
 -spec close(bh_context:context()) -> bh_context:context().
 close(Context) ->
     Listeners = bh_context:listeners(Context),
-    _ = blackhole_listener:remove_bindings(Listeners),
+    blackhole_listener:remove_bindings(Listeners),
     Bindings = bh_context:bindings(Context),
     lists:foreach(fun(B) -> bh_unbind(Context, B) end, Bindings),
     Routines = [{fun bh_context:remove_listeners/2, Listeners}
