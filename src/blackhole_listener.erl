@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2010-2025, 2600Hz
+%%% @copyright (C) 2010-2023, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -190,11 +190,11 @@ send_error_module_resp(EventJObj, Error) ->
 
 -spec add_binding(bh_event_binding()) -> 'ok'.
 add_binding(Binding) ->
-    gen_listener:cast(?SERVER, {'add_bh_binding', Binding}).
+    gen_listener:call(?SERVER, {'add_bh_binding', Binding}).
 
 -spec add_bindings(bh_event_bindings()) -> 'ok'.
 add_bindings(Bindings) ->
-    gen_listener:cast(?SERVER, {'add_bh_bindings', Bindings}).
+    gen_listener:call(?SERVER, {'add_bh_bindings', Bindings}).
 
 -spec remove_binding(bh_event_binding()) -> 'ok'.
 remove_binding(Binding) ->
@@ -222,6 +222,12 @@ init([]) ->
 %% @end
 %%------------------------------------------------------------------------------
 -spec handle_call(any(), kz_term:pid_ref(), state()) -> kz_types:handle_call_ret_state(state()).
+handle_call({'add_bh_bindings', Bindings}, _From, #state{bindings=ETS}=State) ->
+    _ = add_bh_bindings(ETS, Bindings),
+    {'reply', 'ok', State};
+handle_call({'add_bh_binding', Binding}, _From, #state{bindings=ETS}=State) ->
+    _ = add_bh_binding(ETS, Binding),
+    {'reply', 'ok', State};
 handle_call(_Request, _From, State) ->
     {'reply', {'error', 'not_implemented'}, State}.
 
