@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2010-2023, 2600Hz
+%%% @copyright (C) 2010-2025, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -50,9 +50,10 @@ recv({Action, Payload}, Context) ->
 exec(Context, _Action, _Payload, []) ->
     {'ok', Context};
 exec(Context, Action, Payload, [Fun | Funs]) ->
-    lager:debug("executing ~p for ~s with payload ~s"
-               ,[Fun, Action, kz_json:encode(kz_json:delete_key(<<"auth_token">>, Payload))]
-               ),
+    FunInfo = erlang:fun_info(Fun),
+    FunName = props:get_value('name', FunInfo),
+    FunArity = props:get_value('arity', FunInfo),
+    lager:debug("executing ~p/~p for ~s", [FunName, FunArity, Action]),
     Ctx = Fun(Context, Action, Payload),
     case bh_context:success(Ctx) of
         'true' -> exec(Ctx, Action, Payload, Funs);
