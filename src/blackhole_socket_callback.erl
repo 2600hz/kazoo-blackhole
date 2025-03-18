@@ -53,7 +53,9 @@ exec(Context, Action, Payload, [Fun | Funs]) ->
     FunInfo = erlang:fun_info(Fun),
     FunName = props:get_value('name', FunInfo),
     FunArity = props:get_value('arity', FunInfo),
-    lager:debug("executing ~p/~p for ~s", [FunName, FunArity, Action]),
+    lager:debug("executing ~s/~b for ~s with payload ~s"
+               ,[FunName, FunArity, Action, kz_json:encode(kz_json:delete_key(<<"auth_token">>, Payload))]
+               ),
     Ctx = Fun(Context, Action, Payload),
     case bh_context:success(Ctx) of
         'true' -> exec(Ctx, Action, Payload, Funs);
