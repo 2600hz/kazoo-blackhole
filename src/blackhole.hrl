@@ -17,6 +17,7 @@
                          ,'bh_fax'
                          ,'bh_conference'
                          ,'bh_presence'
+                         ,'bh_stream'
                          ]).
 
 -define(COMMAND_MODULES, ['bh_events'
