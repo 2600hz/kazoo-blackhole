@@ -1,6 +1,6 @@
-# Overview
+# Live Conference
 
-Receive Live Conference (verto?) related events.
+Receive Live Conference related events.
 
 ## Authorization
 

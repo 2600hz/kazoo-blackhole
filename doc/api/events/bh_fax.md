@@ -1,4 +1,4 @@
-# Overview
+# Fax
 
 Receive fax related events.
 

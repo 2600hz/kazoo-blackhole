@@ -1,6 +1,6 @@
-# Overview
+# Pivot Stream
 
-A developer can use Pivot (or Callflow) to start streaming an ongoing call's raw audio to their application over Websocket.
+A developer can use Pivot (or Callflow) to start streaming an ongoing call's raw audio to their application over WebSocket.
 When this stream connection is successfully established, a `stream_start` event is fired.
 
 If the stream stops, or the call is hangup or the connection failed to disconnected for any reason, a `stream_stop` event will be fired.
@@ -85,8 +85,8 @@ Example event message:
 
 ## Stream Stop
 
-`stream_stop` fires when the stream ends. This event may include the reason for the stop
-and, if applicable, any error that caused the stream to end.
+`stream_stop` fires when the stream ends. This event may include the reason for
+the stop, and if applicable, any error that caused the stream to end.
 
 To subscribe use WebSocket message (here in this example subscribes to receive the event for all call):
 
@@ -104,19 +104,20 @@ To subscribe use WebSocket message (here in this example subscribes to receive t
 
 ### Event Data Parameters
 
-The subscribed events will send this event message with body with the following parameters:
+The subscribed events will send this event message with body with the following
+parameters:
 
-| Parameter        | Description                                                                                                                             |
-|------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| `account_id`     | The unique ID of the account for the stream                                                                                             |
-| `call_id`        | The unique ID of the call for the stream                                                                                                |
-| `error_message`  | If present indicates the stream is ended because of an error encountered during the stream, the string value provides the error message |
-| `event_category` | Always set to `pivot`                                                                                                                   |
-| `event_name`     | Always set to `stream_stop`                                                                                                             |
-| `reason`         | The reason the stream is stopped                                                                                                        |
-| `stream_id`      | The unique Id of the stream, if it is known. May be missing if the stream failed before initialization                                  |
-| `stream_name`    | The unique name of the stream, if it is known. May be missing if the stream failed before initialization                                |
-|------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| Parameter          | Description                                                                                                                               |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `account_id`       | The unique ID of the account for the stream                                                                                               |
+| `call_id`          | The unique ID of the call for the stream                                                                                                  |
+| `error_message`    | If present indicates the stream is ended because of an error encountered during the stream, the string value provides the error message   |
+| `event_category`   | Always set to `pivot`                                                                                                                     |
+| `event_name`       | Always set to `stream_stop`                                                                                                               |
+| `reason`           | The reason the stream is stopped                                                                                                          |
+| `stream_id`        | The unique Id of the stream, if it is known. May be missing if the stream failed before initialization                                    |
+| `stream_name`      | The unique name of the stream, if it is known. May be missing if the stream failed before initialization                                  |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 
 Example of a normal ending of a stream:
 

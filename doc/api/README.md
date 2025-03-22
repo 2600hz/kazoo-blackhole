@@ -2,10 +2,17 @@
 
 ## Quick Start
 
-1. To interact with Blackhole API, you need to authenticate with {% BRAND_NAME %} first. You can use Crossbar HTTP API to perform authentication (over HTTP protocol) and use the resulting Auth Token when sending the request to WebSocket. See Crossbar's [How to authenticate](https://docs.2600hz.com/git/2600hz/kazoo-crossbar/doc/how_to_authenticate.md) to learn more authentication methods.
+1. To interact with Blackhole API, you need to authenticate with
+   API first. You can use Crossbar HTTP API to perform
+   authentication (over HTTP protocol) and use the resulting Auth Token when
+   sending the request to WebSocket. See Crossbar's
+   [How to authenticate](https://docs.2600hz.com/git/2600hz/kazoo-crossbar/doc/how_to_authenticate.md)
+   to learn more authentication methods.
 1. Make a connection to Blackhole using WebSocket API
-1. Tell WebSocket API what to do when it receives a message (reply) from Blackhole (take action on certain messages or show them in UI)
-1. Once the connection is established, the client and server can send WebSocket data or text frames back and forth in full-duplex mode.
+1. Tell WebSocket API what to do when it receives a message (reply) from
+   Blackhole (take action on certain messages or show them in UI)
+1. Once the connection is established, the client and server can send WebSocket
+   data or text frames back and forth in full-duplex mode.
 
 ### Example JavaScript code
 

@@ -1,6 +1,9 @@
-# Subscribe to {% BRAND_NAME %} events
+# Subscribe to real-time events
 
-This API provide a way to subscribe to {% BRAND_NAME %} event using binding and receive them on websoxckert message in real time. Effectively this API provides an AMQP->Websocket bridge, providing you with real-time event streams about calls, API changes, and more.
+This API provide a way to subscribe to receive real-time event using binding and
+receive them on WebSocket message in real time. Effectively this API provides an
+AMQP->WebSocket bridge, providing you with real-time event streams about calls,
+API changes, and more.
 
 ## Authorization
 
@@ -12,17 +15,17 @@ This is common a request to either `subscribe` or `unsubscribe` actions.
 
 See [Binding string syntax](#binding-string-syntax) below to learn about the format of binding string.
 
-Key | Description | Type | Default | Required
---- | ----------- | ---- | ------- | --------
-`action` | to subscribe or unsubscribe | `string('subscribe' | 'unsubscribe')` |  | `true`
-`data.account_id` | The account ID to use for binding | `string()` |  | `false`
-`data.binding` | Binding string to use | `string()` |  | `false`
-`data.bindings` | A list of bindings to use | `array(string())` |  | `true`
+| Key               | Description                       | Type                                   | Default | Required |
+| ----------------- | --------------------------------- | -------------------------------------- | ------- | -------- |
+| `action`          | to subscribe or unsubscribe       | `string('subscribe' \| 'unsubscribe')` |         | `true`   |
+| `data.account_id` | The account ID to use for binding | `string()`                             |         | `false`  |
+| `data.binding`    | Binding string to use             | `string()`                             |         | `false`  |
+| `data.bindings`   | A list of bindings to use         | `array(string())`                      |         | `true`   |
 
 Please note:
 
 * If no `data.account_id` is present, the `account_id` from your `auth_token` will be used instead.
-* `data.binding`  will be picked first over `data.bindings` in case both are present.
+* `data.binding` will be picked first over `data.bindings` in case both are present.
 
 ## List of events
 
@@ -54,7 +57,7 @@ Please note:
 
 ## Event payload message
 
-After you subscribe to events the Blackhole application will listen for those events from AMQP. It will send an event to you through Websockets if there is an active binding that matches this event.
+After you subscribe to events the Blackhole application will listen for those events from AMQP. It will send an event to you through WebSocket if there is an active binding that matches this event.
 
 Events are plain AMQP event messages.
 
@@ -71,11 +74,11 @@ Events are plain AMQP event messages.
 
 ## Binding string syntax
 
-The binding syntax is the same used throughout all {% BRAND_NAME %}, since it is the same as AMQP's binding syntax.
+The binding syntax is the same used throughout all {% BRAND_NAME %}, since it is the same as AMQP binding syntax.
 
 Each binding is consist of multiple slots (or segments) separated by dot `.`, like `call.CHANNEL_CREATE.*`. Each slot is matches one slot in the event's routing key.
 
-The are two specical characters:
+The are two special characters:
 
 * `*` in a slot matches exactly one slot with any value
 * `#` in a slot matches zero or more slots with any value

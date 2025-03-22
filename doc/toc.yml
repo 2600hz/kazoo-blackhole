@@ -1,18 +1,18 @@
-  # - 'Blackhole: KAZOO WebSocket API':
-- 'Blackhole - WebSocket Server': 'doc/README.md'
+- 'doc/README.md'
 - 'Blackhole WebSocket API':
-  - 'How to use Blackhole API': 'doc/api/README.md'
+  - 'doc/api/README.md'
   - 'API':
-    - 'Crossbar API tunneling': 'doc/api/actions/bh_api.md'
-    - '{% BRAND_NAME %} Events': 'doc/api/actions/bh_events.md'
-    - 'Ping': 'doc/api/actions/bh_ping.md'
+    - 'doc/api/actions/bh_api.md'
+    - 'doc/api/actions/bh_events.md'
+    - 'doc/api/actions/bh_ping.md'
   - 'Events':
-    - 'Call Events': 'doc/api/events/bh_call.md'
-    - 'Conference Events': 'doc/api/events/bh_conference.md'
-    - 'Fax': 'doc/api/events/bh_fax.md'
-    - 'Live Conference': 'doc/api/events/bh_live.md'
-    - 'Document Objects': 'doc/api/events/bh_object.md'
-    - 'Presence': 'doc/api/events/bh_presence.md'
+    - 'doc/api/events/bh_call.md'
+    - 'doc/api/events/bh_conference.md'
+    - 'doc/api/events/bh_fax.md'
+    - 'doc/api/events/bh_live.md'
+    - 'doc/api/events/bh_object.md'
+    - 'doc/api/events/bh_presence.md'
+    # - 'doc/api/events/bh_stream.md'
 # - 'Administrating Blackhole':
 #   - 'Administrating Blackhole': 'doc/blackhole_sys_admin.md'
 #   - 'HAProxy': 'doc/haproxy.md'
