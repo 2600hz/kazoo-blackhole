@@ -12,7 +12,7 @@
     - 'doc/api/events/bh_live.md'
     - 'doc/api/events/bh_object.md'
     - 'doc/api/events/bh_presence.md'
-    # - 'doc/api/events/bh_stream.md'
+    - 'doc/api/events/bh_stream.md'
 # - 'Administrating Blackhole':
 #   - 'Administrating Blackhole': 'doc/blackhole_sys_admin.md'
 #   - 'HAProxy': 'doc/haproxy.md'
