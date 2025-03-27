@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2023, 2600Hz
+%%% @copyright (C) 2012-2025, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -52,18 +52,16 @@ reply(SessionPid, RequestId, Status, Data) ->
 send(SessionPid, Data) ->
     maybe_send(SessionPid, Data).
 
-
 maybe_send(SessionPid, Data) ->
-    maybe_send(SessionPid, Data, process_info(SessionPid, ['message_queue_len'])).
+    maybe_send(SessionPid, Data, process_info(SessionPid, 'message_queue_len')).
 
-maybe_send(SessionPid, Data, [{'message_queue_len', QueueLen}]) ->
+maybe_send(SessionPid, Data, {'message_queue_len', QueueLen}) ->
     maybe_send(SessionPid, Data, QueueLen, ?MAX_QUEUED_MESSAGES);
 maybe_send(_SessionPid, _Data, 'undefined') ->
     lager:info("failed to find session ~p, dropping data").
 
 maybe_send(SessionPid, _Data, QueueLen, MaxLen) when QueueLen > MaxLen ->
     lager:error("~p queue length ~p (max: ~p), dropping event", [SessionPid, QueueLen, MaxLen]);
-maybe_send(SessionPid, Data, QueueLen, _MaxLen) ->
-    lager:info("~p queue length ~p (max: ~p)", [SessionPid, QueueLen, _MaxLen]),
+maybe_send(SessionPid, Data, _QueueLen, _MaxLen) ->
     SessionPid ! {'send_data', Data},
     'ok'.
