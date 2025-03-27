@@ -57,7 +57,6 @@ The subscribed events will send this event message with body with the following 
 | `event_name`     | Always set to `stream_start`                |
 | `stream_id`      | The unique Id of the stream                 |
 | `stream_name`    | The unique name of the stream               |
-|------------------|---------------------------------------------|
 
 Example event message:
 
@@ -117,7 +116,6 @@ parameters:
 | `reason`           | The reason the stream is stopped                                                                                                          |
 | `stream_id`        | The unique Id of the stream, if it is known. May be missing if the stream failed before initialization                                    |
 | `stream_name`      | The unique name of the stream, if it is known. May be missing if the stream failed before initialization                                  |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 
 Example of a normal ending of a stream:
 
