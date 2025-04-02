@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2024, 2600Hz
+%%% @copyright (C) 2012-2025, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -107,29 +107,27 @@ active_sessions() ->
 
 -spec active_sessions_by_ip(kz_term:ne_binary()) -> 'ok'.
 active_sessions_by_ip(<<IPAddr/binary>>) ->
-    Sessions = blackhole_tracking:get_contexts_by_ip(IPAddr),
-    print_sessions(Sessions).
+    Contexts = blackhole_tracking:get_contexts_by_ip(IPAddr),
+    print_sessions(Contexts).
 
 -spec active_sessions_by_account(kz_term:ne_binary()) -> 'ok'.
 active_sessions_by_account(<<AccountId/binary>>) ->
-    Sessions = blackhole_tracking:get_contexts_by_account_id(AccountId),
-    print_sessions(Sessions).
+    Contexts = blackhole_tracking:get_contexts_by_account_id(AccountId),
+    print_sessions(Contexts).
 
--spec print_sessions([bh_context:context()] | tuple()) -> 'ok'.
+-spec print_sessions([bh_context:context()] | {'error', 'not_found'}) -> 'ok'.
 print_sessions([]) -> io:format("no active sessions~n");
 print_sessions({'error', 'not_found'}) -> io:format("no active sessions~n");
-print_sessions(Sessions) ->
+print_sessions(Contexts) ->
     io:format("Active websocket connections:~n"),
-    io:format("~22s | ~12s | ~12s | ~32s | ~s~n"
-             ,[<<"Peer">>, <<"Uptime">>, <<"PID">>, <<"Account-ID">>, <<"Bindings">>]
-             ),
-    lists:foreach(fun print_session/1, Sessions).
+    Header = [<<"Peer">>, <<"Uptime">>, <<"BH PID">>, <<"Auth Account ID">>, <<"Bindings">>],
+    Rows = [Header | [session_info(Context) || Context <- Contexts]],
+    kz_log:print_table(Rows, #{header_divider => $=}).
 
-print_session(Context) ->
-    io:format("~22s | ~12s | ~12s | ~32s | ~s~n"
-             ,[bh_context:websocket_session_id(Context)
-              ,kz_time:pretty_print_elapsed_s(kz_time:elapsed_s(bh_context:timestamp(Context)))
-              ,kz_term:to_binary(bh_context:websocket_pid(Context))
-              ,bh_context:auth_account_id(Context)
-              ,kz_binary:join(bh_context:client_bindings(Context))
-              ]).
+session_info(Context) ->
+    [bh_context:websocket_session_id(Context)
+    ,kz_time:pretty_print_elapsed_s(kz_time:elapsed_s(bh_context:timestamp(Context)))
+    ,kz_term:to_binary(bh_context:websocket_pid(Context))
+    ,bh_context:auth_account_id(Context)
+    ,kz_binary:join(bh_context:client_bindings(Context))
+    ].
