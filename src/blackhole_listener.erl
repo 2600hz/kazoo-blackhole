@@ -215,6 +215,7 @@ remove_bindings(Bindings) ->
 -spec init(list()) -> {'ok', state()}.
 init([]) ->
     kz_log:put_callid(?MODULE),
+    erlang:put('process_name', ?MODULE),
     {'ok', #state{bindings=ets:new(?MODULE, [])}}.
 
 %%------------------------------------------------------------------------------
