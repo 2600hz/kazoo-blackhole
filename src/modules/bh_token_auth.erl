@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2011-2023, 2600Hz
+%%% @copyright (C) 2011-2025, 2600Hz
 %%% @doc Token auth module
 %%% This is a simple auth mechanism, once the user has acquired an
 %%% auth token this module will allow access.  This module should be
@@ -58,8 +58,8 @@ authenticate_token(Context, <<Token/binary>>) ->
     lager:debug("trying to authenticate with token: ~s", [Token]),
     case kz_auth:validate_token(Token) of
         {'ok', JObj} ->
-            lager:info("token auth is valid, authenticating : ~p", [JObj]),
             AccountId = kz_json:get_ne_value(<<"account_id">>, JObj),
+            lager:info("token auth is valid, authenticating account is ~s", [AccountId]),
             bh_context:set_auth_account_id(Context, AccountId);
         {'error', R} ->
             lager:debug("failed to authenticate token auth, ~p", [R]),
