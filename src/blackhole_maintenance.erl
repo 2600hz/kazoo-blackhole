@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2023, 2600Hz
+%%% @copyright (C) 2012-2025, 2600Hz
 %%% @doc
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -107,13 +107,13 @@ active_sessions() ->
 
 -spec active_sessions_by_ip(kz_term:ne_binary()) -> 'ok'.
 active_sessions_by_ip(<<IPAddr/binary>>) ->
-    Sessions = blackhole_tracking:get_contexts_by_ip(IPAddr),
-    print_sessions(Sessions).
+    Contexts = blackhole_tracking:get_contexts_by_ip(IPAddr),
+    print_sessions(Contexts).
 
 -spec active_sessions_by_account(kz_term:ne_binary()) -> 'ok'.
 active_sessions_by_account(<<AccountId/binary>>) ->
-    Sessions = blackhole_tracking:get_contexts_by_account_id(AccountId),
-    print_sessions(Sessions).
+    Contexts = blackhole_tracking:get_contexts_by_account_id(AccountId),
+    print_sessions(Contexts).
 
 -spec print_sessions([bh_context:context()] | tuple()) -> 'ok'.
 print_sessions([]) -> io:format("no active sessions~n");
