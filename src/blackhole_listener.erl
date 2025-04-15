@@ -268,9 +268,6 @@ handle_info({'kapi', {_, _, CallEvent}}, State) ->
     AccountId = kz_call_event:account_id(CallEvent),
     _ = kz_process:spawn(fun handle_hook_event/3, [AccountId, HookEvent, CallEvent]),
     {'noreply', State};
-handle_info(?HOOK_EVT(AccountId, EventType, JObj), State) ->
-    _ = kz_process:spawn(fun handle_hook_event/3, [AccountId, EventType, JObj]),
-    {'noreply', State};
 handle_info(_Info, State) ->
     {'noreply', State}.
 
