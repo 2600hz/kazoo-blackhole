@@ -261,7 +261,7 @@ handle_cast(_Msg, State) ->
 %% @doc Handling all non call/cast messages.
 %% @end
 %%------------------------------------------------------------------------------
--spec handle_info(?HOOK_EVT(kz_term:ne_binary(), kz_term:ne_binary(), kz_json:object()), state()) ->
+-spec handle_info(any(), state()) ->
           {'noreply', state()}.
 handle_info({'kapi', {_, _, CallEvent}}, State) ->
     HookEvent = kz_api:event_name(CallEvent),
