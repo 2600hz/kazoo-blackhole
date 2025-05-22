@@ -26,7 +26,7 @@ open(Context) ->
                                                     ]),
 
     Routing = <<"blackhole.session.open">>,
-    Ctx = blackhole_bindings:fold(Routing, Context),
+    Ctx = blackhole_bindings:fold(Routing, Context, ets:lookup('kazoo_bindings', Routing)),
     {'ok', Ctx}.
 
 -spec recv({binary(), kz_json:object()}, bh_context:context()) -> bh_return() | 'error'.
@@ -82,7 +82,7 @@ close(HandlerOpts) when is_list(HandlerOpts) ->
 close(Context) ->
     lager:info("closing session ~s", [bh_context:websocket_session_id(Context)]),
     Routing = <<"blackhole.session.close">>,
-    blackhole_bindings:fold(Routing, Context).
+    blackhole_bindings:fold(Routing, Context, ets:lookup('kazoo_bindings', Routing)).
 
 %%%=============================================================================
 %%% Internal functions
@@ -144,7 +144,15 @@ command_if_data(Context, 'true') ->
 
 finish(Context, Action, _Payload) ->
     Routing = <<"blackhole.finish.", Action/binary>>,
-    blackhole_bindings:fold(Routing, Context).
+    Base = <<"blackhole.finish.">>,
+    Suffixes = [<<"*">>
+               ,Action],
+
+    Bindings = lists:flatmap(fun(Suffix) ->
+                                     RK = <<Base/binary, Suffix/binary>>,
+                                     ets:lookup('kazoo_bindings', RK)
+                             end, Suffixes),
+    blackhole_bindings:fold(Routing, Context, Bindings).
 
 handle_result(Context, []) -> Context;
 handle_result(Context, Res) ->
