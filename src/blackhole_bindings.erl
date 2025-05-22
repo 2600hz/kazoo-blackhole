@@ -32,7 +32,7 @@
         ,unbind/3, unbind/4
         ,map/2, map/3
         ,pmap/2, pmap/3
-        ,fold/2
+        ,fold/2, fold/3
         ,flush/0, flush/1, flush_mod/1
         ,filter/1
         ,modules_loaded/0
@@ -85,6 +85,12 @@
 -spec fold(kz_term:ne_binary(), payload()) -> fold_results().
 fold(Routing, Payload) ->
     kazoo_bindings:fold(Routing, Payload).
+
+-spec fold(kz_term:ne_binary(), payload(), kz_bindings()) -> fold_results().
+fold(Routing, Payload, Bindings) ->
+    Options = [{'candidates', fun(_) -> Bindings end}
+              ],
+    kazoo_bindings:fold(Routing, Payload, Options).
 
 %%------------------------------------------------------------------------------
 %% @doc Helper functions for working on a result set of bindings
