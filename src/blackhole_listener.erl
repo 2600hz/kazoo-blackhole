@@ -88,7 +88,12 @@ handle_amqp_event(EventJObj, _Props, <<RoutingKey/binary>>) ->
     RK = <<"blackhole.event.", RoutingKey/binary>>,
 
     StartTime = kz_time:start_time(),
-    Res = blackhole_bindings:pmap(RK, [RoutingKey, EventJObj]),
+    Res = case lookup_bindings(EventJObj) of
+              [] ->
+                  blackhole_bindings:pmap(RK, [RoutingKey, EventJObj]);
+              Bindings ->
+                  blackhole_bindings:pmap(RK, [RoutingKey, EventJObj], Bindings)
+          end,
     lager:debug("delivered the event ~p (~s) to ~b subscriptions in ~b ms (used bh rk ~s)"
                ,[Evt, RoutingKey, length(Res), kz_time:elapsed_ms(StartTime), RK]
                );
@@ -404,3 +409,97 @@ flush_bh_binding({Key, _Counter}, ETS) ->
     Binding = binary_to_term(base64:decode(Key)),
     remove_bh_binding(ETS, Binding, Key, 0),
     ETS.
+
+-spec lookup_bindings(kz_json:object()) -> list().
+lookup_bindings(EventJObj) ->
+    lookup_bindings(EventJObj, kz_api:event_type(EventJObj)).
+
+-spec lookup_bindings(kz_json:object(), {kz_term:api_ne_binary(), kz_term:api_ne_binary()}) -> kazoo_bindings:kz_bindings().
+lookup_bindings(EventJObj, {<<"call_event">>, _}) ->
+    %% RK: call.{account_id}.{event}.{call_id}
+    Event = kz_api:event_name(EventJObj),
+    AccountId = kz_call_event:account_id(EventJObj, <<"*">>),
+    CallId = encode_call_id(EventJObj),
+    Base = <<"blackhole.event.call.", AccountId/binary, ".">>,
+
+    Suffixes = [<<"*.*">>
+               ,<<"*.", CallId/binary>>
+               ,<<Event/binary, ".*">>
+               ,<<Event/binary, ".", CallId/binary>>
+               ],
+
+    do_lookup(Base, Suffixes);
+lookup_bindings(EventJObj, {<<"qubicle-session">>, _}) ->
+    %% RK: qubicle.session.{account_id}.{session_id}.{event}
+    SessionId = kz_json:get_ne_binary_value(<<"Session-ID">>, EventJObj, <<"*">>),
+    AccountId = kz_json:get_ne_binary_value(<<"Account-ID">>, EventJObj, <<"*">>),
+    EventName = kz_api:event_name(EventJObj),
+    Base = <<"blackhole.event.qubicle.session.", AccountId/binary, ".">>,
+    Suffixes = [<<"*.*">>
+               ,<<SessionId/binary, ".*">>
+               ,<<SessionId/binary, ".", EventName/binary>>
+               ,<<"*.", EventName/binary>>
+               ],
+    do_lookup(Base, Suffixes);
+lookup_bindings(EventJObj, {<<"qubicle-queue">>, _}) ->
+    %% RK: qubicle.queue.{account_id}.{recipient_id}.{event}
+    AccountId = kz_json:get_ne_binary_value(<<"Account-ID">>, EventJObj, <<"*">>),
+    QueueId = kz_json:get_ne_binary_value(<<"Queue-ID">>, EventJObj, <<"*">>),
+    EventName = kz_api:event_name(EventJObj),
+    Base = <<"blackhole.event.qubicle.queue.", AccountId/binary, ".">>,
+    Suffixes = [<<"*.*">>
+               ,<<QueueId/binary, ".*">>
+               ,<<QueueId/binary, ".", EventName/binary>>
+               ,<<"*.", EventName/binary>>
+               ],
+    do_lookup(Base, Suffixes);
+lookup_bindings(EventJObj, {<<"qubicle-recipient">>, _}) ->
+    %% RK: qubicle.recipient.{account_id}.{recipient_id}.{event}
+    AccountId = kz_json:get_ne_binary_value(<<"Account-ID">>, EventJObj, <<"*">>),
+    RecipientId = kz_json:get_ne_binary_value(<<"Recipient-ID">>, EventJObj, <<"*">>),
+    EventName = kz_api:event_name(EventJObj),
+    Base = <<"blackhole.event.qubicle.recipient.", AccountId/binary, ".">>,
+    Suffixes = [<<"*.*">>
+               ,<<RecipientId/binary, ".*">>
+               ,<<RecipientId/binary, ".", EventName/binary>>
+               ,<<"*.", EventName/binary>>
+               ],
+    do_lookup(Base, Suffixes);
+lookup_bindings(EventJObj, {<<"configuration">>, _}) ->
+    %% RK: {doc_action}.{account_db}.{doc_type}.*
+    AccountDb = kz_json:get_ne_binary_value(<<"Database">>, EventJObj, <<"*">>),
+    Action = kz_json:get_ne_binary_value(<<"Event-Name">>, EventJObj, <<"*">>),
+    Type = kz_json:get_ne_binary_value(<<"Type">>, EventJObj, <<"*">>),
+    Base = <<"blackhole.event.">>,
+    Suffixes = [<<"*.*.*.*">>
+               ,<<Action/binary, ".*.*.*">>
+               ,<<Action/binary, ".", AccountDb/binary, ".*.*">>
+               ,<<Action/binary, ".", AccountDb/binary, ".", Type/binary, ".*">>
+               ,<<Action/binary, ".*.", Type/binary, ".*">>
+               ,<<"*.", AccountDb/binary, ".", Type/binary, ".*">>
+               ,<<"*.", AccountDb/binary, ".*.*">>
+               ,<<"*.*.", Type/binary, ".*">>
+               ],
+
+    do_lookup(Base, Suffixes);
+lookup_bindings(EventJObj, {<<"fax">>, <<"status">>}) ->
+    %% RK: fax.status.{account_id}.{job_id}
+    AccountId = kz_json:get_ne_binary_value(<<"Account-ID">>, EventJObj, <<"*">>),
+    FaxId = kz_json:get_first_defined([<<"Fax-ID">>,<<"Job-ID">>], EventJObj, <<"*">>),
+    Base = <<"blackhole.event.fax.status.", AccountId/binary, ".">>,
+    Suffixes = [<<"*">>
+               ,FaxId
+               ],
+    do_lookup(Base, Suffixes);
+lookup_bindings(_EventJObj, LookupType) ->
+    lager:info("unsupported hook type: ~p", [LookupType]),
+    [].
+
+-spec do_lookup(kz_term:ne_binary(), kz_term:ne_binaries()) -> kazoo_bindings:kz_bindings().
+do_lookup(Base, Suffixes) ->
+    lists:usort(
+      lists:flatmap(fun(Suffix) ->
+                            Routing = <<Base/binary, Suffix/binary>>,
+                            ets:lookup('kazoo_bindings', Routing)
+                    end, Suffixes)
+     ).
