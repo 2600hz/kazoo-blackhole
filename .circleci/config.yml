@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  kazoo: official-2600hz/kazoo@0.4.0
+  kazoo: official-2600hz/kazoo@0.4.1
 filters:
   tags:
     only: '/^\d+\.\d+\.\d+(\.\d+)?$/'
@@ -34,7 +34,7 @@ workflows:
             parameters:
               platform: [centos-7, rockylinux-8, rockylinux-9]
           requires:
-            - 'preparation-<< matrix.platform >>'
+            - kazoo/build-preparation
       -
         kazoo/eunit-tests:
           context: Private-Builds
