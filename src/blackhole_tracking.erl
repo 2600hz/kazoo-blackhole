@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2010-2025, 2600Hz
+%%% @copyright (C) 2010-2023, 2600Hz
 %%% @doc
 %%% @author Peter Defebvre
 %%%
@@ -100,16 +100,21 @@ get_sockets_by_account(GetReq) ->
     AccountId = kz_json:get_ne_binary_value(<<"Account-ID">>, GetReq),
     AuthAccountId = kz_json:get_ne_binary_value(<<"Auth-Account-ID">>, GetReq),
 
-    get_sockets_by_account(GetReq, AccountId, AuthAccountId).
+    get_sockets_by_account(GetReq, [AccountId, AuthAccountId], []).
 
-get_sockets_by_account(GetReq, AccountId, AccountId) ->
-    success_resp(GetReq, to_resp_data(get_contexts_by_account_id(AccountId)));
-get_sockets_by_account(GetReq, AccountId, AuthAccountId) ->
-    Merged = lists:foldl(fun maybe_add_context/2
-                        ,get_contexts_by_account_id(AccountId)
-                        ,get_contexts_by_account_id(AuthAccountId)
-                        ),
-    success_resp(GetReq, to_resp_data(Merged)).
+get_sockets_by_account(GetReq, [], Contexts) ->
+    success_resp(GetReq, to_resp_data(Contexts));
+get_sockets_by_account(GetReq, ['undefined' | IDs], Contexts) ->
+    get_sockets_by_account(GetReq, IDs, Contexts);
+get_sockets_by_account(GetReq, [AccountId | IDs], Contexts) ->
+    case get_contexts_by_account_id(AccountId) of
+        {'error', 'not_found'} ->
+            lager:info("failed to find contexts for account ~s", [AccountId]),
+            get_sockets_by_account(GetReq, IDs, Contexts);
+        AccountContexts ->
+            UpdatedContexts = lists:foldl(fun maybe_add_context/2, Contexts, AccountContexts),
+            get_sockets_by_account(GetReq, IDs, UpdatedContexts)
+    end.
 
 %% filter out duplicate (if any) and add context
 maybe_add_context(Context, Contexts) ->
@@ -156,11 +161,7 @@ success_resp(GetReq, Data) ->
 -spec add_socket(bh_context:context()) -> bh_context:context().
 add_socket(Context) ->
     'true' = ets:insert(?SERVER, Context),
-    gen_listener:cast(?SERVER, {'monitor'
-                               ,bh_context:websocket_session_id(Context)
-                               ,bh_context:websocket_pid(Context)
-                               }
-                     ),
+    gen_listener:cast(?SERVER, {'monitor', bh_context:websocket_session_id(Context), bh_context:websocket_pid(Context)}),
     Context.
 
 %%------------------------------------------------------------------------------
@@ -197,10 +198,14 @@ get_contexts() ->
 %% @end
 %%------------------------------------------------------------------------------
 -spec get_contexts_by_account_id(kz_term:ne_binary()) ->
-          [bh_context:context()].
+          [bh_context:context(),...] |
+          {'error', 'not_found'}.
 get_contexts_by_account_id(<<AccountId/binary>>) ->
     Pattern = bh_context:match_auth_account_id(AccountId),
-    ets:match_object(?SERVER, Pattern).
+    case ets:match_object(?SERVER, Pattern) of
+        [] -> {'error', 'not_found'};
+        Contexts -> Contexts
+    end.
 
 %%------------------------------------------------------------------------------
 %% @doc

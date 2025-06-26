@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2025, 2600Hz
+%%% @copyright (C) 2012-2023, 2600Hz
 %%% @doc
 %%% @author James Aimonetti
 %%% @author Peter Defebvre
@@ -16,8 +16,6 @@
 -export([init/0
         ,validate/2
         ,bindings/2
-
-        ,listen_to/0
         ]).
 
 -include("blackhole.hrl").
@@ -53,9 +51,6 @@ init_bindings() ->
         {'ok', _} -> lager:debug("initialized call bindings");
         {'error', _E} -> lager:info("failed to initialize call bindings: ~p", [_E])
     end.
-
--spec listen_to() -> kz_term:ne_binaries().
-listen_to() -> ?LISTEN_TO.
 
 -spec validate(bh_context:context(), map()) -> bh_context:context().
 validate(Context, #{keys := [<<"*">>, _]}) ->

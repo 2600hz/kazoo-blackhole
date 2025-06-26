@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2010-2025, 2600Hz
+%%% @copyright (C) 2010-2023, 2600Hz
 %%% @doc Store routing keys/pid bindings. When a binding is fired,
 %%% pass the payload to the pid for evaluation, accumulating
 %%% the results for the response to the running process.
@@ -51,16 +51,8 @@
 
 -include("blackhole.hrl").
 
--type bind_result() :: 'ok' |
-                       {'error', 'exists'}.
--type bind_results() :: [bind_result()].
-
 -type payload_el() :: bh_context:context() | kz_term:ne_binary() | map() | kz_json:object().
 -type payload() :: [payload_el()] | payload_el().
-
--export_type([bind_result/0
-             ,bind_results/0
-             ]).
 
 %%%=============================================================================
 %%% API
@@ -168,6 +160,9 @@ filter_out_succeeded(Result) ->
         'false' -> kz_term:is_empty(Result)
     end.
 
+-type bind_result() :: 'ok' |
+                       {'error', 'exists'}.
+-type bind_results() :: [bind_result()].
 -spec bind(kz_term:ne_binary() | kz_term:ne_binaries(), atom(), atom()) ->
           bind_result() | bind_results().
 bind(Bindings, Module, Fun) ->
