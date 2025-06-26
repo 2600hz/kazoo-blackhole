@@ -21,6 +21,7 @@
 %%------------------------------------------------------------------------------
 -spec start(application:start_type(), any()) -> kz_types:startapp_ret().
 start(_Type, _Args) ->
+    kz_events:start_call_events(),
     blackhole_sup:start_link().
 
 %%------------------------------------------------------------------------------
