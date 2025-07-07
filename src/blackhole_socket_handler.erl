@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2012-2025, 2600Hz
+%%% @copyright (C) 2012-2023, 2600Hz
 %%% @doc
 %%% @author Karl Anderson
 %%%
@@ -102,15 +102,12 @@ set_session_id(Req, _HandlerOpts, Context) ->
 
 authenticate(Req, HandlerOpts, Context) ->
     Token = cowboy_req:parse_header(<<"authorization">>, Req),
-    authenticate_token(Req, HandlerOpts, Context, Token).
-
-authenticate_token(_Req, _HandlerOpts, Context, 'undefined') ->
-    lager:info("no auth token supplied"),
-    Context;
-authenticate_token(Req, HandlerOpts, Context, Token) ->
-    case kz_auth:validate_token(Token) of
+    case Token =/= 'undefined'
+        andalso kz_auth:validate_token(Token)
+    of
+        'false' -> Context;
         {'ok', JObj} ->
-            lager:info("auth token is valid, authenticated"),
+            lager:info("token auth is valid, authenticating : ~p", [JObj]),
             AccountId = kz_json:get_ne_value(<<"account_id">>, JObj),
             Setters = [{fun bh_context:set_auth_token/2, Token}
                       ,{fun bh_context:set_auth_account_id/2, AccountId}
@@ -122,7 +119,7 @@ authenticate_token(Req, HandlerOpts, Context, Token) ->
             {'ok', cowboy_req:reply(403, Req), HandlerOpts}
     end.
 
--spec maybe_start_keep_alive() -> 'ok' | reference().
+-spec maybe_start_keep_alive() -> ok | reference().
 maybe_start_keep_alive() ->
     case kz_app_config:get_boolean(?APP, <<"keep_client_alive">>, 'false') of
         'true' -> erlang:send_after(1 * ?MILLISECONDS_IN_MINUTE, self(), 'keep_alive');

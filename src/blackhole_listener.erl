@@ -12,7 +12,6 @@
 
 -export([start_link/0
         ,handle_amqp_event/3
-        ,handle_call_event/1
         ,add_binding/1, remove_binding/1
         ,add_bindings/1, remove_bindings/1
         ,flush/0
@@ -90,8 +89,8 @@ handle_amqp_event(EventJObj, _Props, <<RoutingKey/binary>>) ->
 
     StartTime = kz_time:start_time(),
     Res = blackhole_bindings:pmap(RK, [RoutingKey, EventJObj]),
-    lager:debug("delivered the event ~p (~s) to ~b subscriptions in ~b ms (used bh rk ~s)"
-               ,[Evt, RoutingKey, length(Res), kz_time:elapsed_ms(StartTime), RK]
+    lager:debug("delivered the event ~p (~s) to ~b subscriptions in ~b ms"
+               ,[Evt, RoutingKey, length(Res), kz_time:elapsed_ms(StartTime)]
                );
 handle_amqp_event(EventJObj, Props, BasicDeliver) ->
     handle_amqp_event(EventJObj, Props, gen_listener:routing_key_used(BasicDeliver)).
@@ -216,11 +215,6 @@ remove_bindings(Bindings) ->
 -spec init(list()) -> {'ok', state()}.
 init([]) ->
     kz_log:put_callid(?MODULE),
-
-    %% bind for all accounts' call events, easier to discard events
-    %% than adjust AMQP bindings dynamically
-    kz_events:add_async_call_event_handler(<<"*">>, <<"*">>, fun handle_call_event/1),
-
     {'ok', #state{bindings=ets:new(?MODULE, [])}}.
 
 %%------------------------------------------------------------------------------
@@ -262,12 +256,10 @@ handle_cast(_Msg, State) ->
 %% @doc Handling all non call/cast messages.
 %% @end
 %%------------------------------------------------------------------------------
--spec handle_info(any(), state()) ->
+-spec handle_info(?HOOK_EVT(kz_term:ne_binary(), kz_term:ne_binary(), kz_json:object()), state()) ->
           {'noreply', state()}.
-handle_info({'kapi', {_, _, CallEvent}}, State) ->
-    HookEvent = kz_api:event_name(CallEvent),
-    AccountId = kz_call_event:account_id(CallEvent),
-    _ = kz_process:spawn(fun handle_hook_event/3, [AccountId, HookEvent, CallEvent]),
+handle_info(?HOOK_EVT(AccountId, EventType, JObj), State) ->
+    _ = kz_process:spawn(fun handle_hook_event/3, [AccountId, EventType, JObj]),
     {'noreply', State};
 handle_info(_Info, State) ->
     {'noreply', State}.
@@ -277,28 +269,7 @@ handle_info(_Info, State) ->
 %% @end
 %%------------------------------------------------------------------------------
 -spec handle_event(kz_json:object(), kz_term:proplist()) -> gen_listener:handle_event_return().
-handle_event(JObj, _State) ->
-    maybe_handle_call_event(JObj).
-
--spec handle_call_event([kapi_call:event()] | kapi_call:event()) -> 'ok'.
-handle_call_event([CallEvent]) ->
-    handle_call_event(CallEvent);
-handle_call_event(CallEvent) ->
-    _ = maybe_handle_call_event(CallEvent),
-    'ok'.
-
-maybe_handle_call_event(JObj) ->
-    maybe_handle_call_event(JObj, kz_api:event_category(JObj)).
-
-%% delivered via kz_events
-maybe_handle_call_event(CallEvent, <<"call_event">>) ->
-    HookEvent = kz_api:event_name(CallEvent),
-    AccountId = kz_call_event:account_id(CallEvent),
-    _Pid = kz_process:spawn(fun handle_hook_event/3, [AccountId, HookEvent, CallEvent]),
-    lager:info("handling call event ~s in ~p", [HookEvent, _Pid]),
-    'ignore';
-maybe_handle_call_event(_JObj, _Cat) ->
-    lager:info("ignoring evt"),
+handle_event(_JObj, _State) ->
     {'reply', []}.
 
 %%------------------------------------------------------------------------------
@@ -342,7 +313,6 @@ handle_hook_event(AccountId, EventType, JObj) ->
                         ]
                        ,<<".">>
                        ),
-    lager:info("building call rk ~s", [RK]),
     handle_amqp_event(JObj, [], RK).
 
 -spec binding_key(bh_event_binding()) -> binary().
@@ -386,16 +356,21 @@ remove_bh_binding(_ETS, _Binding, _Key, _Else) ->
                ,[_Else, _Binding]
                ).
 
-%% {hook,...} is replaced with kz_events call event handler
-add_bh_binding({'hook', _AccountId}) -> 'ok';
-add_bh_binding({'hook', <<"*">>, _Event}) -> 'ok';
-add_bh_binding({'hook', _AccountId, _Event}) -> 'ok';
+add_bh_binding({'hook', AccountId}) ->
+    kz_hooks:register(AccountId);
+add_bh_binding({'hook', <<"*">>, _Event}) ->
+    kz_hooks:register();
+add_bh_binding({'hook', AccountId, Event}) ->
+    kz_hooks:register(AccountId, Event);
 add_bh_binding({'amqp', Wapi, Options}) ->
     gen_listener:add_binding(self(), Wapi, Options).
 
-remove_bh_binding({'hook', _AccountId}) -> 'ok';
-remove_bh_binding({'hook', <<"*">>, _Event}) -> 'ok';
-remove_bh_binding({'hook', _AccountId, _Event}) -> 'ok';
+remove_bh_binding({'hook', AccountId}) ->
+    kz_hooks:deregister(AccountId);
+remove_bh_binding({'hook', <<"*">>, _Event}) ->
+    kz_hooks:deregister();
+remove_bh_binding({'hook', AccountId, Event}) ->
+    kz_hooks:deregister(AccountId, Event);
 remove_bh_binding({'amqp', Wapi, Options}) ->
     gen_listener:rm_binding(self(), Wapi, Options).
 
