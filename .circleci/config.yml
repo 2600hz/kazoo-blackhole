@@ -43,18 +43,22 @@ workflows:
             - preparation-centos-7
       -
         kazoo/code-checks:
+          otp-version: '<< pipeline.parameters.otp-version >>'
           requires:
             - beams-centos-7
       -
         kazoo/docs:
+          otp-version: '<< pipeline.parameters.otp-version >>'
           requires:
             - beams-centos-7
       -
         kazoo/analyze:
+          otp-version: '<< pipeline.parameters.otp-version >>'
           requires:
             - beams-centos-7
       -
         kazoo/integration-test:
+          otp-version: '<< pipeline.parameters.otp-version >>'
           requires:
             - beams-centos-7
       -
@@ -125,6 +129,7 @@ workflows:
               ignore: '/.*/'
       -
         kazoo/code-checks:
+          otp-version: '<< pipeline.parameters.otp-version >>'
           requires:
             - beams-centos-7
           filters:
@@ -134,6 +139,7 @@ workflows:
               ignore: '/.*/'
       -
         kazoo/docs:
+          otp-version: '<< pipeline.parameters.otp-version >>'
           requires:
             - beams-centos-7
           filters:
@@ -143,6 +149,7 @@ workflows:
               ignore: '/.*/'
       -
         kazoo/analyze:
+          otp-version: '<< pipeline.parameters.otp-version >>'
           requires:
             - beams-centos-7
           filters:
@@ -152,6 +159,7 @@ workflows:
               ignore: '/.*/'
       -
         kazoo/integration-test:
+          otp-version: '<< pipeline.parameters.otp-version >>'
           requires:
             - beams-centos-7
           filters:
